@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: staff-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/rezervet
+    name: rezervet
+    password: rezervet
+  jpa:
+    hibernate:
+      ddl-auto: update
+  auth-service:
+    url: http://auth-service:8080
+  restaurant-service:
+    url: http://restauran-service:8080

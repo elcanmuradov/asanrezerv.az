@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: media-service
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+      enabled: true
+  server:
+    port: 8080
+  cloudinary:
+    cloud-name: dotf5ilyu
+    api-key: 353149926779487
+    api-secret: Gu4tPuV8PJrI-NkaxOSrtWgq_1k
+  management:
+    endpoint:
+      health:
+        show-details: always
+    endpoints:
+      web:
+        exposure:
+          include: health,info

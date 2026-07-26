@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: notification-service
+  mail:
+    host:
+    password: 8Jwz5w[8c6qqSMc0^+GSOr?Wtj4G}n[3

@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: subscription-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/rezervet
+    name: rezervet
+    password: rezervet
+  jpa:
+    hibernate:
+      ddl-auto: update
+  kafka:
+    producer:
+      bootstrap-servers: kafka:9092

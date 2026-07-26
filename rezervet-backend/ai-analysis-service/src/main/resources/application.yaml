@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: ai-analysis-service
+  client:
+    urls:
+      restaurant-service: http://restaurant-service:8080
+      reservation-service: http://reservation-service:8080
+      subscription-service: http://subscription-service:8080
+
+ai:
+  llm:
+    enabled: ${AI_LLM_ENABLED:false}
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: claude-haiku-4-5
+    base-url: https://api.anthropic.com/v1/messages

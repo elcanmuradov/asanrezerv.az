@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: restaurant-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/rezervet
+    name: rezervet
+    password: rezervet
+  jpa:
+    hibernate:
+      ddl-auto: update
+  services:
+    subscription-service:
+      url: http://subscription-service:8080
+    media-service:
+      url: http://media-service:8080
+
+  kafka:
+    producer:
+      bootstrap-servers: kafka:9092
