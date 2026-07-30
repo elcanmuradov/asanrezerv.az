@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Spinner from '../../components/Spinner';
 import ErrorAlert from '../../components/ErrorAlert';
-import { getMyRestaurant, updateMyRestaurant, uploadRestaurantImage } from '../../api/restaurants';
+import { getMyRestaurant, updateMyRestaurant, uploadRestaurantImage, publishRestaurant } from '../../api/restaurants';
 import { formatAzPhoneInput } from '../../utils/phone';
 
 const MAX_IMAGE_MB = 5;
@@ -12,11 +12,14 @@ export default function RestaurantSettings() {
     name: '', cuisine: '', city: '', phone: '', description: '',
     bannerUrl: '', profileImageUrl: '',
   });
+  const [restaurantId, setRestaurantId] = useState(null);
+  const [publicationStatus, setPublicationStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(null); // 'banner' | 'profile' | null
+  const [publishing, setPublishing] = useState(false);
 
   const bannerInputRef = useRef(null);
   const profileInputRef = useRef(null);
@@ -32,6 +35,8 @@ export default function RestaurantSettings() {
           bannerUrl: media.bannerUrl ?? r.bannerUrl ?? '',
           profileImageUrl: media.profilePhotoUrl ?? r.profileImageUrl ?? '',
         });
+        setRestaurantId(r.id ?? null);
+        setPublicationStatus(r.publicationStatus ?? 'DRAFT');
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
@@ -64,6 +69,20 @@ export default function RestaurantSettings() {
     }
   };
 
+  const onPublish = async () => {
+    if (!restaurantId || publishing) return;
+    setError(null);
+    setPublishing(true);
+    try {
+      await publishRestaurant(restaurantId);
+      setPublicationStatus('PUBLISHED');
+    } catch (err) {
+      setError(err);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const onSave = async (e) => {
     e.preventDefault();
     setError(null);
@@ -92,7 +111,34 @@ export default function RestaurantSettings() {
           <span className="material-symbols-outlined text-sm">chevron_right</span>
           <span className="font-sans text-label-md">Restoran</span>
         </nav>
-        <h2 className="font-serif text-headline-md text-on-background">Restoran profili</h2>
+        <div className="flex items-center justify-between flex-wrap gap-md">
+          <h2 className="font-serif text-headline-md text-on-background">Restoran profili</h2>
+          <div className="flex items-center gap-sm">
+            <span
+              className={`px-sm py-xs rounded-full font-sans text-label-md flex items-center gap-xs ${
+                publicationStatus === 'PUBLISHED'
+                  ? 'bg-primary-fixed text-on-primary-fixed'
+                  : 'bg-surface-container-high text-on-surface-variant'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {publicationStatus === 'PUBLISHED' ? 'public' : 'visibility_off'}
+              </span>
+              {publicationStatus === 'PUBLISHED' ? 'Dərc olunub' : 'Qaralama (Draft)'}
+            </span>
+            {publicationStatus !== 'PUBLISHED' && (
+              <button
+                type="button"
+                onClick={onPublish}
+                disabled={!restaurantId || publishing}
+                className="px-lg py-sm bg-primary text-on-primary rounded-xl font-sans text-label-md hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-[18px]">campaign</span>
+                {publishing ? 'Dərc edilir...' : 'Dərc et'}
+              </button>
+            )}
+          </div>
+        </div>
       </header>
 
       <ErrorAlert error={error} />

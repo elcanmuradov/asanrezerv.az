@@ -18,9 +18,9 @@ spring:
     producer:
       bootstrap-servers: kafka:9092
   datasource:
-    url: jdbc:postgresql://postgres:5432/rezervet
-    name: rezervet
-    password: rezervet
+    url: jdbc:postgresql://postgres:5432/asanrezerv
+    name: asanrezerv
+    password: asanrezerv
   jpa:
     hibernate:
       ddl-auto: update

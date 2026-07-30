@@ -7,8 +7,8 @@ ext {
     springCloudVersion = "2025.1.2"
 }
 
-group = 'com.rezervet'
-version = '0.0.1-SNAPSHOT'
+group = 'com.asanrezerv'
+version = '1.0.0-RELEASE'
 description = 'restaurant-service'
 
 java {

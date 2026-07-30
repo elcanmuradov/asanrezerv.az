@@ -1,15 +1,13 @@
 import client from './client';
 
-// Public: restoranların siyahısı (search-service / Elasticsearch üzərindən oxunur)
-// { search, city, page, size } — `search` varsa mətn axtarışı, yoxdursa sadə siyahı.
-// DİQQƏT: search-service-in siyahı endpoint-i (pageNumber/pageSize, 1-əsaslı) və axtarış
-// endpoint-i (page/size, 0-əsaslı) fərqli səhifələmə konvensiyası istifadə edir; `city`
-// filtri hazırda search-service-də dəstəklənmir (iqnor olunur).
+// Public: restoranların siyahısı (search-service / Elasticsearch üzərindən oxunur, yalnız PUBLISHED olanlar)
+// { search, city, page, size } — `search` varsa mətn axtarışı, yoxdursa sadə siyahı (hər ikisi 0-əsaslı səhifələmə).
+// `city` filtri hazırda search-service-də dəstəklənmir (iqnor olunur).
 export const getRestaurants = ({ search, page = 0, size = 20 } = {}) => {
   if (search) {
     return client.get('/search/restaurants/search', { params: { query: search, page, size } });
   }
-  return client.get('/search/restaurants', { params: { pageNumber: page + 1, pageSize: size } });
+  return client.get('/search/restaurants', { params: { page, size } });
 };
 
 export const getRestaurant = (id) => client.get(`/search/restaurants/${id}`);
@@ -38,6 +36,9 @@ export const getMyRestaurant = () => client.get('/restaurants/restaurant');
 export const createMyRestaurant = (payload) => client.post('/restaurants/restaurant', payload); // { name, cuisine, city, phone, description }
 export const updateMyRestaurant = (payload) => client.put('/restaurants/restaurant', payload);
 // { name, cuisine, city, phone, description, bannerUrl, profileImageUrl }
+
+// Restoranı DRAFT-dan PUBLISHED-ə keçirir (ana səhifədə görünməsi üçün)
+export const publishRestaurant = (id) => client.patch(`/restaurants/${id}/publish`);
 
 // Şəkil yükləmə: type = 'BANNER' | 'PROFILE' | 'GALLERY' | 'MENU_ITEM'. Multipart göndərir, yüklənmiş şəklin URL-ini qaytarır.
 export const uploadRestaurantImage = (type, file) => {

@@ -1,7 +1,6 @@
 spring:
   application:
     name: search-service
-
   elasticsearch:
     uris: ${SPRING_ELASTICSEARCH_URIS:http://elasticsearch:9200}
 
@@ -9,7 +8,9 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
-
+    elasticsearch:
+      repositories:
+        enabled: true
   kafka:
     producer:
       bootstrap-servers: kafka:9092

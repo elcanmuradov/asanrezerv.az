@@ -2,9 +2,9 @@ spring:
   application:
     name: subscription-service
   datasource:
-    url: jdbc:postgresql://postgres:5432/rezervet
-    name: rezervet
-    password: rezervet
+    url: jdbc:postgresql://postgres:5432/asanrezerv
+    name: asanrezerv
+    password: asanrezerv
   jpa:
     hibernate:
       ddl-auto: update
