@@ -26,7 +26,7 @@ public class AnalyticsService {
     private final RestaurantClient restaurantClient;
 
     private static final Set<ReservationStatus> NO_SHOW =
-            EnumSet.of(ReservationStatus.DENIED, ReservationStatus.EXPIRED);
+            EnumSet.of(ReservationStatus.NO_SHOW, ReservationStatus.CANCELLED);
 
     public List<ReservationDto> reservations(UUID restaurantId) {
         List<ReservationDto> list = data(reservationClient.getByRestaurant(restaurantId));
@@ -72,7 +72,7 @@ public class AnalyticsService {
         double noShowRate = total == 0 ? 0.0 : round2((double) noShow / total);
 
         // Doluluq: qəbul olunmuş rezervlər / (masa sayı * fərqli günlər)
-        long accepted = reservations.stream().filter(r -> r.getStatus() == ReservationStatus.ACCEPTED).count();
+        long accepted = reservations.stream().filter(r -> r.getStatus() == ReservationStatus.CONFIRMED).count();
         long distinctDays = reservations.stream().map(ReservationDto::getDate).filter(Objects::nonNull).distinct().count();
         double occupancy = 0.0;
         if (totalTables > 0 && distinctDays > 0) {
@@ -84,12 +84,16 @@ public class AnalyticsService {
         Map<YearMonth, Integer> byMonth = new TreeMap<>();
         int monthlyReservationsCount = 0;
         YearMonth currentMonth = YearMonth.now();
+        YearMonth previousMonth = currentMonth.minusMonths(1);
+        int previousMonthReservationsCount = 0;
         for (ReservationDto r : reservations) {
             if (r.getDate() != null) {
                 YearMonth ym = YearMonth.from(r.getDate());
                 byMonth.merge(ym, 1, Integer::sum);
                 if (ym.equals(currentMonth)) {
                     monthlyReservationsCount++;
+                } else if (ym.equals(previousMonth)) {
+                    previousMonthReservationsCount++;
                 }
             }
         }
@@ -97,6 +101,10 @@ public class AnalyticsService {
                 .skip(Math.max(0, byMonth.size() - 6))
                 .map(e -> new AiSummaryDto.MonthlyPoint(e.getKey().toString(), e.getValue()))
                 .collect(Collectors.toList());
+
+        // Bu ay / keçən ay artım faizi (keçən ay data yoxdursa müqayisə mümkün deyil -> null)
+        Double growthPercent = previousMonthReservationsCount == 0 ? null
+                : round2(100.0 * (monthlyReservationsCount - previousMonthReservationsCount) / previousMonthReservationsCount);
 
         return AiSummaryDto.builder()
                 .totalReservations(total)
@@ -109,6 +117,8 @@ public class AnalyticsService {
                 .branchCount(branches != null ? branches.size() : 0)
                 .tableCount(totalTables)
                 .monthlyReservations(monthlyReservationsCount)
+                .previousMonthReservations(previousMonthReservationsCount)
+                .reservationsGrowthPercent(growthPercent)
                 .build();
     }
 

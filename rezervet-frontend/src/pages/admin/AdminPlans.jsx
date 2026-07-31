@@ -9,8 +9,8 @@ const UNLIMITED = -1;
 const isUnlimited = (v) => v === UNLIMITED || v === null || v === undefined;
 const limitLabel = (v) => (isUnlimited(v) ? 'Limitsiz' : v);
 
-// AI analitika səviyyəsi: 0 = bağlı, 1 = aşağı səviyyə, 2 = yüksək səviyyə (+ proqnoz/LLM)
-const AI_LEVEL_LABELS = { 0: 'Bağlı', 1: 'Aşağı səviyyə', 2: 'Yüksək səviyyə' };
+// AI analitika səviyyəsi: 0 = bağlı, 1 = əsas statistika, 2 = proqnoz + artım faizi, 3 = DeepSeek ilə dərin analiz
+const AI_LEVEL_LABELS = { 0: 'Bağlı', 1: 'Əsas statistika', 2: 'Proqnoz + artım faizi', 3: 'AI ilə dərin analiz (DeepSeek)' };
 
 const emptyForm = {
   name: '',
@@ -280,8 +280,9 @@ export default function AdminPlans() {
                   className={inputClass}
                 >
                   <option value={0}>0 — Bağlı</option>
-                  <option value={1}>1 — Aşağı səviyyə</option>
-                  <option value={2}>2 — Yüksək səviyyə (proqnoz + LLM)</option>
+                  <option value={1}>1 — Əsas statistika</option>
+                  <option value={2}>2 — Proqnoz + artım faizi</option>
+                  <option value={3}>3 — AI ilə dərin analiz (DeepSeek)</option>
                 </select>
               </div>
 

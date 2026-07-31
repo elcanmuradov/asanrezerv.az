@@ -1,29 +1,29 @@
-name: rezervet
+name: asanrezerv
 
 services:
   # ---------------- İnfrastruktur ----------------
   postgres:
     image: postgres:17-alpine
-    container_name: rezervet-postgres
+    container_name: asanrezerv-postgres
     environment:
-      POSTGRES_DB: rezervet
-      POSTGRES_USER: rezervet
-      POSTGRES_PASSWORD: rezervet
+      POSTGRES_DB: asanrezerv
+      POSTGRES_USER: asanrezerv
+      POSTGRES_PASSWORD: asanrezerv
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rezervet -d rezervet"]
+      test: ["CMD-SHELL", "pg_isready -U asanrezerv -d asanrezerv"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   redis:
     image: redis:7-alpine
-    container_name: rezervet-redis
+    container_name: asanrezerv-redis
     ports:
       - "6379:6379"
     volumes:
@@ -34,13 +34,13 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   # Kafka (KRaft rejimi — Zookeeper-siz, tək node).
   # Servislər daxildən `kafka:9092`, host-dan (debug) `localhost:29092`.
   kafka:
     image: apache/kafka:3.8.1
-    container_name: rezervet-kafka
+    container_name: asanrezerv-kafka
     ports:
       - "29092:29092"
     environment:
@@ -64,13 +64,13 @@ services:
       timeout: 10s
       retries: 10
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   # Elasticsearch — search-service-in indeksi (restoran/filial axtarışı).
   # Tək node, təhlükəsizlik söndürülüb (yalnız daxili şəbəkə, lokal dev üçün kifayətdir).
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.4.2
-    container_name: rezervet-elasticsearch
+    container_name: asanrezerv-elasticsearch
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -85,7 +85,39 @@ services:
       timeout: 10s
       retries: 10
     networks:
-      - rezervet-net
+      - asanrezerv-net
+
+  # Kibana — mövcud Elasticsearch üzərində (index-lərə baxış, axtarış, sadə vizuallaşdırma).
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.4.2
+    container_name: asanrezerv-kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - asanrezerv-net
+
+  # Grafana — Postgres data source əvvəlcədən quraşdırılıb (dashboard-lar əl ilə yaradılır).
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: asanrezerv-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - asanrezerv-net
 
   # ---------------- Backend servisləri ----------------
   # DİQQƏT: auth-service və restaurant-service host-a AÇILMIR (ports yoxdur).
@@ -95,7 +127,7 @@ services:
     build: 
       context: ./rezervet-backend/auth-service
       dockerfile: Dockerfile
-    container_name: rezervet-auth
+    container_name: asanrezerv-auth
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,22 +135,22 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
-      SPRING_DATASOURCE_USERNAME: rezervet
-      SPRING_DATASOURCE_PASSWORD: rezervet
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
+      SPRING_DATASOURCE_USERNAME: asanrezerv
+      SPRING_DATASOURCE_PASSWORD: asanrezerv
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_SECURITY_SECRET_KEY: 29ae22012893c9a29b5ae3a46b2b810042b0c0a5ead0e86df0c040f35f4f639345fe9ce2ad0d6dcc7a3669d4fc8601ec89c0e50048461e0a6e500fd41250e8679d4318fb852b4c70f20a98b026c9ce8af32bd2c6f9478906d48612549835ecb42f980e65ca18836780414bdd78f77d8625a3cf64a070e656f94eecde28d259f48b59f563ac5fc9786b88d645a56ac41a45f3dcfbcf2233bb9b1e9609516a1f4df8b95fd3fd2b5466e863a4fcceb9b1ed166894914d705b7f3ce237d6bffa569a16e68839394e3721a6787f22183229747de3a5fcc0d79fa0f4a6a04e164f381ab98ed2cf13a6ca34ee96723ec8b4b48caa7f1a3f81c6f18fdb60b1a5ffaad695
    
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   restaurant-service:
     build:
       context: ./rezervet-backend/restaurant-service
       dockerfile: Dockerfile
-    container_name: rezervet-restaurant
+    container_name: asanrezerv-restaurant
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,9 +160,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
-      SPRING_DATASOURCE_USERNAME: rezervet
-      SPRING_DATASOURCE_PASSWORD: rezervet
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
+      SPRING_DATASOURCE_USERNAME: asanrezerv
+      SPRING_DATASOURCE_PASSWORD: asanrezerv
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       # Redis (limit cache) + Kafka (limit event-ləri)
       SPRING_DATA_REDIS_HOST: redis
@@ -138,29 +170,29 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     restart: unless-stopped
     networks:
-      - rezervet-net
+      - asanrezerv-net
   staff-service:
     build: 
       context: ./rezervet-backend/staff-service
       dockerfile: Dockerfile
-    container_name: rezervet-staff
+    container_name: asanrezerv-staff
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
-      SPRING_DATASOURCE_USERNAME: rezervet
-      SPRING_DATASOURCE_PASSWORD: rezervet
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
+      SPRING_DATASOURCE_USERNAME: asanrezerv
+      SPRING_DATASOURCE_PASSWORD: asanrezerv
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     restart: unless-stopped
     networks:
-      - rezervet-net
+      - asanrezerv-net
   subscription-service:
     build: 
       context: ./rezervet-backend/subscription-service
       dockerfile: Dockerfile
-    container_name: rezervet-subscription
+    container_name: asanrezerv-subscription
     depends_on:
       postgres:
         condition: service_healthy
@@ -168,18 +200,18 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
-      SPRING_DATASOURCE_USERNAME: rezervet
-      SPRING_DATASOURCE_PASSWORD: rezervet
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
+      SPRING_DATASOURCE_USERNAME: asanrezerv
+      SPRING_DATASOURCE_PASSWORD: asanrezerv
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   reservation-service:
     build: 
       context: ./rezervet-backend/reservation-service
       dockerfile: Dockerfile
-    container_name: rezervet-reservation
+    container_name: asanrezerv-reservation
     depends_on:
       postgres:
         condition: service_healthy
@@ -187,21 +219,21 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
-      SPRING_DATASOURCE_USERNAME: rezervet
-      SPRING_DATASOURCE_PASSWORD: rezervet
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
+      SPRING_DATASOURCE_USERNAME: asanrezerv
+      SPRING_DATASOURCE_PASSWORD: asanrezerv
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   # AI analitika — stateless (DB yox), yalnız Redis + Feign (digər servisləri oxuyur)
   ai-analysis-service:
     build:
       context: ./rezervet-backend/ai-analysis-service
       dockerfile: Dockerfile
-    container_name: rezervet-ai-analysis
+    container_name: asanrezerv-ai-analysis
     depends_on:
       redis:
         condition: service_healthy
@@ -209,18 +241,18 @@ services:
       SERVER_PORT: 8080
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      # LLM narrative (Level 2). Key əlavə olununca AI_LLM_ENABLED=true et.
-      AI_LLM_ENABLED: "false"
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # DeepSeek ilə LLM narrative (Level 3). Key əlavə olununca AI_LLM_ENABLED=true et.
+      AI_LLM_ENABLED: ${AI_LLM_ENABLED:-false}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   # Restoran/filial axtarışı — Elasticsearch üzərində, Kafka event-ləri ilə sinxronlaşır.
   search-service:
     build:
       context: ./rezervet-backend/search-service
       dockerfile: Dockerfile
-    container_name: rezervet-search
+    container_name: asanrezerv-search
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -235,27 +267,27 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   media-service:
     build:
       context: ./rezervet-backend/media-service
       dockerfile: Dockerfile
-    container_name: rezervet-media
+    container_name: asanrezerv-media
     depends_on:
       redis:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   # ---------------- API Gateway (yeganə açıq backend giriş nöqtəsi) ----------------
   api-gateway:
     build: 
       context: ./rezervet-backend/api-gateway
       dockerfile: Dockerfile
-    container_name: rezervet-gateway
+    container_name: asanrezerv-gateway
     environment:
       SERVER_PORT: 8080
       SPRING_SECURITY_SECRET_KEY: ${JWT_SECRET}
@@ -275,25 +307,26 @@ services:
       - ai-analysis-service
       - search-service
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
   # ---------------- Frontend (nginx: statik + /api proxy) ----------------
   frontend:
     build: ./rezervet-frontend
-    container_name: rezervet-frontend
+    container_name: asanrezerv-frontend
     ports:
       - "5173:80"
     depends_on:
       - api-gateway
     networks:
-      - rezervet-net
+      - asanrezerv-net
 
 volumes:
   postgres_data:
   redis_data:
   kafka_data:
   elasticsearch_data:
+  grafana_data:
 
 networks:
-  rezervet-net:
+  asanrezerv-net:
     driver: bridge

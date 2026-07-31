@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Claude Messages API (Anthropic) inteqrasiyası — yalnız Level 2 narrative üçün.
- * Key/enabled yoxdursa isEnabled() false qaytarır və çağıran qayda-əsaslı mətnə keçir.
+ * DeepSeek Chat Completions API inteqrasiyası (OpenAI-uyğun format) — yalnız Level 3
+ * "dərin AI analiz" üçün. Key/enabled yoxdursa isEnabled() false qaytarır və çağıran
+ * qayda-əsaslı mətnə keçir.
  */
 @Slf4j
 @Component
@@ -22,10 +23,10 @@ public class LlmClient {
     @Value("${ai.llm.api-key:}")
     private String apiKey;
 
-    @Value("${ai.llm.model:claude-haiku-4-5}")
+    @Value("${ai.llm.model:deepseek-chat}")
     private String model;
 
-    @Value("${ai.llm.base-url:https://api.anthropic.com/v1/messages}")
+    @Value("${ai.llm.base-url:https://api.deepseek.com/chat/completions}")
     private String baseUrl;
 
     private final RestClient http = RestClient.create();
@@ -45,17 +46,17 @@ public class LlmClient {
             );
             Map<?, ?> resp = http.post()
                     .uri(baseUrl)
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
+                    .header("Authorization", "Bearer " + apiKey)
                     .header("content-type", "application/json")
                     .body(body)
                     .retrieve()
                     .body(Map.class);
 
-            // response.content[0].text
-            if (resp != null && resp.get("content") instanceof List<?> content && !content.isEmpty()
-                    && content.get(0) instanceof Map<?, ?> first) {
-                Object text = first.get("text");
+            // response.choices[0].message.content
+            if (resp != null && resp.get("choices") instanceof List<?> choices && !choices.isEmpty()
+                    && choices.get(0) instanceof Map<?, ?> first
+                    && first.get("message") instanceof Map<?, ?> message) {
+                Object text = message.get("content");
                 return text == null ? null : text.toString();
             }
         } catch (Exception e) {

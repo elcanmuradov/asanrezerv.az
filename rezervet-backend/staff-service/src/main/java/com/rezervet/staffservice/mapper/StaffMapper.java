@@ -12,6 +12,8 @@ public class StaffMapper {
                 .id(assignment.getId())
                 .userId(assignment.getUserId())
                 .branchId(assignment.getBranchId())
+                .fullName(assignment.getFullName())
+                .email(assignment.getEmail())
                 .role(assignment.getRole())
                 .createdAt(assignment.getCreatedAt())
                 .build();

@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
+import java.util.List;
+
 @Document(indexName = "branches")
 @Data
 @Builder
@@ -45,8 +47,11 @@ public class BranchDocument {
     @Field(type = FieldType.Integer)
     private int maxTableCapacity;
 
-    @Field(type = FieldType.Date_Range)
+    @Field(type = FieldType.Keyword)
     private String workingHours;
+
+    @Field(type = FieldType.Keyword)
+    private List<String> photosUrl;
 
     @Field(type = FieldType.Date)
     private String createdAt;

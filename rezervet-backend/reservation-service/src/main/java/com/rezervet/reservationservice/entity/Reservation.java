@@ -30,9 +30,13 @@ public class Reservation {
 
     private String guestName;
 
+    private String guestPhone;
+
     private UUID guestId;
 
     private Integer guestCount;
+
+    private String note;
 
     private UUID restaurantId;
 

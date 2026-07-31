@@ -21,7 +21,7 @@ export default function CreateRestaurant() {
     let active = true;
     getMyRestaurant()
       .then((res) => { if (active && res.data) navigate('/manager', { replace: true }); })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => { if (active) setChecking(false); });
     return () => { active = false; };
   }, [navigate]);
@@ -49,7 +49,7 @@ export default function CreateRestaurant() {
     <div className="min-h-screen bg-background flex items-center justify-center px-gutter py-lg">
       <div className="w-full max-w-lg">
         <div className="text-center mb-lg">
-          <span className="font-serif text-display-lg-mobile font-bold text-primary">Rezervet</span>
+          <span className="font-serif text-display-lg-mobile font-bold text-primary">AsanRezerv</span>
           <div className="inline-flex items-center gap-xs bg-primary-container text-on-primary-container px-md py-1.5 rounded-full font-sans text-label-md mt-sm">
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             İlk addım

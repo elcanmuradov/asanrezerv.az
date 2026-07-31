@@ -100,6 +100,13 @@ public class RestaurantController {
         return ResponseEntity.ok(ApiResponse.success(restaurantService.getBranches(userId)));
     }
 
+    // Tək filialın datası (ad, iş saatları və s.) — waiter/reservation-service kimi digər
+    // servislərin öz filialını göstərmək üçün istifadə etdiyi, sahiblik yoxlaması olmayan sorğu.
+    @GetMapping("/branches/{id}")
+    public ResponseEntity<ApiResponse<BranchDto>> getBranchById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success(restaurantService.getBranchById(id)));
+    }
+
     @PostMapping("/branches")
     public ResponseEntity<ApiResponse<BranchDto>> createBranch(
             @RequestHeader("X-User-Id") UUID userId,
@@ -113,6 +120,14 @@ public class RestaurantController {
             @PathVariable UUID id,
             @RequestBody BranchRequest request) {
         return ResponseEntity.ok(ApiResponse.success(restaurantService.updateBranch(userId, id, request)));
+    }
+
+    @PostMapping("/branches/{id}/image")
+    public ResponseEntity<ApiResponse<String>> uploadBranchImage(
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success(restaurantService.uploadBranchImage(userId, id, file)));
     }
 
     @DeleteMapping("/branches/{id}")

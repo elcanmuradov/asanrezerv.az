@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import Spinner from '../../components/Spinner';
 import EmptyState from '../../components/EmptyState';
 import ErrorAlert from '../../components/ErrorAlert';
-import { getBranches, createBranch, updateBranch, deleteBranch } from '../../api/restaurants';
+import { getBranches, createBranch, updateBranch, deleteBranch, uploadBranchImage } from '../../api/restaurants';
 import { formatAzPhoneInput } from '../../utils/phone';
 
 const emptyForm = {
   name: '', address: '', phone: '',
-  city: '', district: '', latitude: '', longitude: '',
+  city: '', district: '', googleMapsLink: '',
   openingTime: '10:00', closingTime: '23:00',
 };
 
@@ -28,6 +28,8 @@ export default function Branches() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -43,6 +45,7 @@ export default function Branches() {
     setEditing(null);
     setForm(emptyForm);
     setFormError(null);
+    setPhotos([]);
     setModalOpen(true);
   };
 
@@ -54,12 +57,31 @@ export default function Branches() {
       phone: branch.phone ?? '',
       city: branch.city ?? '',
       district: branch.district ?? '',
-      latitude: branch.latitude ?? '',
-      longitude: branch.longitude ?? '',
+      googleMapsLink: branch.googleMapsLink ?? '',
       ...parseWorkingHours(branch.workingHours),
     });
     setFormError(null);
+    setPhotos(branch.photosUrl ?? []);
     setModalOpen(true);
+  };
+
+  const onPickPhoto = async (file) => {
+    if (!file || !editing) return;
+    setFormError(null);
+    if (!file.type.startsWith('image/')) {
+      setFormError(new Error('Yalnız şəkil faylı seçin (JPG, PNG, WebP).'));
+      return;
+    }
+    setUploadingPhoto(true);
+    try {
+      const { data } = await uploadBranchImage(editing.id, file);
+      const url = typeof data === 'string' ? data : data?.url;
+      if (url) setPhotos((prev) => [...prev, url]);
+    } catch (err) {
+      setFormError(err);
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   const onSave = async (e) => {
@@ -67,11 +89,9 @@ export default function Branches() {
     setSaving(true);
     setFormError(null);
     try {
-      const { openingTime, closingTime, latitude, longitude, ...rest } = form;
+      const { openingTime, closingTime, ...rest } = form;
       const payload = {
         ...rest,
-        latitude: latitude === '' ? null : Number(latitude),
-        longitude: longitude === '' ? null : Number(longitude),
         openingTime,
         closingTime,
         // Köhnə/başqa yerlərdə göstərmək üçün mətn forması da göndərilir
@@ -150,8 +170,12 @@ export default function Branches() {
                 className="group flex items-center justify-between p-4 bg-surface rounded-xl border border-transparent hover:border-outline-variant transition-all"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-primary text-3xl">storefront</span>
+                  <div className="w-16 h-16 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0 overflow-hidden">
+                    {b.photosUrl?.[0] ? (
+                      <img src={b.photosUrl[0]} alt={b.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-primary text-3xl">storefront</span>
+                    )}
                   </div>
                   <div>
                     <h4 className="font-sans text-title-lg text-on-surface">{b.name}</h4>
@@ -197,6 +221,30 @@ export default function Branches() {
             </div>
             <form onSubmit={onSave} className="p-md space-y-md">
               <ErrorAlert error={formError} />
+              {editing && (
+                <div className="space-y-xs">
+                  <label className="font-sans text-label-md text-on-surface-variant">Şəkillər</label>
+                  <div className="flex flex-wrap gap-sm">
+                    {photos.map((url, i) => (
+                      <div key={i} className="w-16 h-16 rounded-lg overflow-hidden bg-surface-container-highest">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                    <label className="w-16 h-16 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:bg-surface-container transition-colors">
+                      <span className="material-symbols-outlined text-on-surface-variant">
+                        {uploadingPhoto ? 'hourglass_top' : 'add_a_photo'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingPhoto}
+                        onChange={(e) => { onPickPhoto(e.target.files?.[0]); e.target.value = ''; }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
               <div className="space-y-xs">
                 <label className="font-sans text-label-md text-on-surface-variant">Filial adı</label>
                 <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Məs: Mərkəz filialı" className={inputClass} />
@@ -226,27 +274,17 @@ export default function Branches() {
                 </div>
               </div>
               <div className="space-y-xs">
-                <div className="flex items-center justify-between">
-                  <label className="font-sans text-label-md text-on-surface-variant">Koordinatlar (xəritədə axtarış üçün)</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!navigator.geolocation) return;
-                      navigator.geolocation.getCurrentPosition(
-                        (pos) => setForm((f) => ({ ...f, latitude: pos.coords.latitude, longitude: pos.coords.longitude })),
-                        () => setFormError(new Error('Məkan alına bilmədi'))
-                      );
-                    }}
-                    className="font-sans text-label-md text-primary hover:underline flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">my_location</span>
-                    Mövcud məkan
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-md">
-                  <input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="Enlik (latitude)" className={inputClass} />
-                  <input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Uzunluq (longitude)" className={inputClass} />
-                </div>
+                <label className="font-sans text-label-md text-on-surface-variant">Google Maps linki</label>
+                <input
+                  type="url"
+                  value={form.googleMapsLink}
+                  onChange={(e) => setForm({ ...form, googleMapsLink: e.target.value })}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className={inputClass}
+                />
+                <p className="font-sans text-caption text-on-surface-variant">
+                  Google Maps-də filialın yerini açın, "Paylaş" → "Linki kopyala" edib bura yapışdırın.
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-md">
                 <div className="space-y-xs">

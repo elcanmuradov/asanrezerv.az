@@ -8,6 +8,8 @@ import RequireRestaurant from './components/RequireRestaurant';
 import Home from './pages/public/Home';
 import RestaurantDetail from './pages/public/RestaurantDetail';
 import Pricing from './pages/public/Pricing';
+import MapPage from './pages/public/MapPage';
+import BranchPage from './pages/public/BranchPage';
 
 // Auth
 import Login from './pages/auth/Login';
@@ -67,6 +69,8 @@ export default function App() {
           {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/restoran/:id" element={<RestaurantDetail />} />
+          <Route path="/filial/:id" element={<BranchPage />} />
+          <Route path="/xerite" element={<MapPage />} />
           <Route path="/qiymetler" element={<Pricing />} />
           {/* İstifadəçi girişi/qeydiyyatı */}
           <Route path="/login" element={<Login mode="user" />} />
@@ -101,7 +105,7 @@ export default function App() {
           <Route
             element={
               <ProtectedRoute roles={['MANAGER']} loginPath="/biznes/login">
-                <PanelLayout title="Rezervet" subtitle="Menecer paneli" items={managerNav} />
+                <PanelLayout title="AsanRezerv" subtitle="Menecer paneli" items={managerNav} />
               </ProtectedRoute>
             }
           >
@@ -121,7 +125,7 @@ export default function App() {
           <Route
             element={
               <ProtectedRoute roles={['WAITER', 'MANAGER']} loginPath="/biznes/login">
-                <PanelLayout title="Rezervet" subtitle="Ofisiant paneli" items={waiterNav} />
+                <PanelLayout title="AsanRezerv" subtitle="Ofisiant paneli" items={waiterNav} />
               </ProtectedRoute>
             }
           >
@@ -132,7 +136,7 @@ export default function App() {
           <Route
             element={
               <ProtectedRoute roles={['ADMIN']}>
-                <PanelLayout title="Rezervet" subtitle="Admin paneli" items={adminNav} />
+                <PanelLayout title="AsanRezerv" subtitle="Admin paneli" items={adminNav} />
               </ProtectedRoute>
             }
           >

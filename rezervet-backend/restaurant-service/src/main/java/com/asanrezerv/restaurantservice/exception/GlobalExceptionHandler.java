@@ -23,4 +23,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleReachedQuotaLimitException(ReachedQuotaLimitException e){
         return ResponseEntity.status(400).body(ApiResponse.fail(e.getMessage()));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalArgumentException(IllegalArgumentException e){
+        return ResponseEntity.status(400).body(ApiResponse.fail(e.getMessage()));
+    }
 }

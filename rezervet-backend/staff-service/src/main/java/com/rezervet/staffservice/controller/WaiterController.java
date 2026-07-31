@@ -1,6 +1,7 @@
 package com.rezervet.staffservice.controller;
 
 import com.rezervet.staffservice.dto.ApiResponse;
+import com.rezervet.staffservice.dto.restaurant.BranchDto;
 import com.rezervet.staffservice.enums.TableStatus;
 import com.rezervet.staffservice.service.WaiterService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class WaiterController {
     private final WaiterService waiterService;
 
     @GetMapping("/branch")
-    public ResponseEntity<ApiResponse<UUID>> getMyBranchId(
+    public ResponseEntity<ApiResponse<BranchDto>> getMyBranchId(
             @RequestHeader("X-User-Id") UUID userId) {
         return ResponseEntity.ok(ApiResponse.success(waiterService.getMyBranches(userId)));
     }

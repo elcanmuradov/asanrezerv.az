@@ -17,13 +17,17 @@ public class AiSummaryDto {
     private double avgOccupancyPercent;    // orta doluluq %
     private Map<Integer, Integer> peakHours;      // saat(0-23) -> rezerv sayı
     private Map<String, Integer> channelSplit;    // ONLINE/MANUAL -> say
-    private double noShowRate;             // (DENIED+EXPIRED)/total
+    private double noShowRate;             // (NO_SHOW+CANCELLED)/total
     private List<MonthlyPoint> monthlyTrend;      // aylıq rezerv trendi
 
     // Dashboard metrics
     private int branchCount;
     private int tableCount;
     private int monthlyReservations;
+
+    // Level 2: keçən ay ilə müqayisə
+    private int previousMonthReservations;
+    private Double reservationsGrowthPercent; // null = keçən ay data yoxdur (müqayisə mümkün deyil)
 
     @Data
     @Builder

@@ -15,6 +15,12 @@ export const getRestaurant = (id) => client.get(`/search/restaurants/${id}`);
 export const getRestaurantBranches = (id) =>
   client.get(`/search/restaurants/${id}/branches`);
 
+// Xəritə səhifəsi üçün: koordinatı olan bütün (dərc olunmuş) filiallar. Login tələb olunmur.
+export const getMapBranches = () => client.get('/search/map/branches');
+
+// Tək filialın öz (public) səhifəsi üçün. Login tələb olunmur.
+export const getBranch = (id) => client.get(`/search/branches/${id}`);
+
 // Seçilmiş filial üçün uyğun masalar / slotlar
 // { date, time, partySize }
 
@@ -23,6 +29,15 @@ export const getBranches = () => client.get('/restaurants/branches');
 export const createBranch = (payload) => client.post('/restaurants/branches', payload); // { name, address, phone, openingTime, closingTime, workingHours }
 export const updateBranch = (id, payload) => client.put(`/restaurants/branches/${id}`, payload);
 export const deleteBranch = (id) => client.delete(`/restaurants/branches/${id}`);
+
+// Filiala şəkil əlavə edir (qalereya). Multipart göndərir, yüklənmiş şəklin URL-ini qaytarır.
+export const uploadBranchImage = (branchId, file) => {
+  const form = new FormData();
+  form.append('file', file);
+  return client.post(`/restaurants/branches/${branchId}/image`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
 
 // ---- Masalar ----
 export const getTables = (branchId) => client.get(`/restaurants/branches/${branchId}/tables`);

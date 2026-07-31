@@ -21,7 +21,7 @@ public class ForecastService {
 
     public ForecastDto forecast(UUID restaurantId, int days) {
         List<ReservationDto> reservations = analyticsService.reservations(restaurantId).stream()
-                .filter(r -> r.getDate() != null && r.getStatus() == ReservationStatus.ACCEPTED)
+                .filter(r -> r.getDate() != null && r.getStatus() == ReservationStatus.CONFIRMED)
                 .toList();
 
         // Tarix -> say

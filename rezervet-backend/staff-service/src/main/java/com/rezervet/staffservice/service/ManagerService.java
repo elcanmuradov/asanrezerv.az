@@ -1,6 +1,8 @@
 package com.rezervet.staffservice.service;
 
 import com.rezervet.staffservice.client.AuthClient;
+import com.rezervet.staffservice.client.RestaurantClient;
+import com.rezervet.staffservice.dto.restaurant.BranchDto;
 import com.rezervet.staffservice.dto.staff.StaffDto;
 import com.rezervet.staffservice.dto.staff.StaffRequest;
 import com.rezervet.staffservice.dto.staff.WaiterAuthResponse;
@@ -12,9 +14,10 @@ import com.rezervet.staffservice.repository.StaffRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,18 +25,27 @@ public class ManagerService {
     private final StaffRepository staffRepository;
     private final StaffMapper staffMapper;
     private final AuthClient authClient;
+    private final RestaurantClient restaurantClient;
 
 
 
     public List<StaffDto> getStaff(UUID userId) {
-        List<StaffDto> staff = new ArrayList<>();
-        staffRepository.findStaffAssignmentsByRole(StaffRole.WAITER).forEach(
-                staffAssignment -> staff.add(staffMapper.staffToDto(staffAssignment))
-        );
+        UUID restaurantId = restaurantClient.getMyRestaurant(userId).getData().getId();
+        List<BranchDto> branches = restaurantClient.getBranchesByRestaurant(restaurantId).getData();
+        List<UUID> branchIds = branches.stream().map(BranchDto::getId).toList();
+        Map<UUID, String> branchNames = branches.stream()
+                .collect(Collectors.toMap(BranchDto::getId, BranchDto::getName));
 
-
-        return staff;
-
+        return staffRepository.findStaffAssignmentsByRoleAndBranchIdIn(StaffRole.WAITER, branchIds).stream()
+                .map(assignment -> {
+                    StaffDto dto = staffMapper.staffToDto(assignment);
+                    dto.setBranch(StaffDto.BranchSummary.builder()
+                            .id(assignment.getBranchId())
+                            .name(branchNames.get(assignment.getBranchId()))
+                            .build());
+                    return dto;
+                })
+                .toList();
     }
 
 
@@ -46,6 +58,8 @@ public class ManagerService {
         StaffAssignment assignment = StaffAssignment.builder()
                 .userId(response.getId())
                 .branchId(request.getBranchId())
+                .fullName(response.getFullName())
+                .email(response.getEmail())
                 .role(StaffRole.WAITER)
                 .build();
 

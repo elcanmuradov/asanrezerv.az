@@ -18,7 +18,11 @@ public class ReservationRequest {
 
     private String guestName;
 
+    private String guestPhone;
+
     private Integer guestCount;
+
+    private String note;
 
     private Integer duration; // (MINUTES)
 
@@ -26,7 +30,7 @@ public class ReservationRequest {
 
     private UUID branchId;
 
-    private UUID tableId;
+    private UUID tableId; // Əl ilə rezervdə menecer/ofisiant konkret masa seçə bilər (opsional)
 
     private LocalDate date;
 

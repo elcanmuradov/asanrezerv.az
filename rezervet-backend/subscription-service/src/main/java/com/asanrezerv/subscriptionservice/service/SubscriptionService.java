@@ -53,7 +53,6 @@ public class SubscriptionService {
 
     }
 
-    // AI analiz səviyyəsi: aktiv abunə yoxdursa 0, əks halda plan.aiAnalysisLevel (null -> 0)
     public Integer getAiLevel(UUID restaurantId) {
         var opt = subscriptionRepository.findSubscriptionByRestaurantIdAndStatus(restaurantId,SubscriptionStatus.ACTIVE);
         if (opt.isEmpty()) {

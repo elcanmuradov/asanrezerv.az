@@ -29,6 +29,7 @@ import com.asanrezerv.restaurantservice.repository.BranchRepository;
 import com.asanrezerv.restaurantservice.repository.RestaurantImageRepository;
 import com.asanrezerv.restaurantservice.repository.RestaurantRepository;
 import com.asanrezerv.restaurantservice.repository.TableRepository;
+import com.asanrezerv.restaurantservice.util.GoogleMapsLinkParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -199,6 +200,12 @@ public class RestaurantService {
 
     }
 
+    public BranchDto getBranchById(UUID id) {
+        var branch = branchRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Filial tapılmadı!"));
+        return branchMapper.toBranchDto(branch);
+    }
+
     public BranchDto createBranch(UUID userId, BranchRequest request) {
 
 
@@ -234,10 +241,13 @@ public class RestaurantService {
         }
 
 
-        if (usage.getCurrentBranchCount() >= limits.getMaxBranches()) {
-            throw new ReachedQuotaLimitException("Siz yanlız " + limits.getMaxBranches() + "ədəd filial əlavə edə bilərsiniz!");
+
+        if (limits.getMaxBranches() != -1 && usage.getCurrentBranchCount() >= limits.getMaxBranches()) {
+            throw new ReachedQuotaLimitException("Siz yanlız " + limits.getMaxBranches() + " ədəd filial əlavə edə bilərsiniz!");
         }
 
+
+        var coordinates = GoogleMapsLinkParser.parse(request.getGoogleMapsLink());
 
         Branch branch = Branch.builder()
                 .restaurant(restaurant)
@@ -246,8 +256,9 @@ public class RestaurantService {
                 .phone(request.getPhone())
                 .city(Optional.ofNullable(request.getCity()).filter(c -> !c.isBlank()).orElse(restaurant.getCity()))
                 .district(request.getDistrict())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
+                .googleMapsLink(request.getGoogleMapsLink())
+                .latitude(coordinates != null ? coordinates.latitude() : null)
+                .longitude(coordinates != null ? coordinates.longitude() : null)
                 .openingTime(request.getOpeningTime())
                 .closingTime(request.getClosingTime())
                 .build();
@@ -284,6 +295,7 @@ public class RestaurantService {
                 .address(branch.getAddress())
                 .latitude(branch.getLatitude())
                 .longitude(branch.getLongitude())
+                .photosUrl(branch.getPhotosUrl())
                 .minTableCapacity(min)
                 .maxTableCapacity(max)
                 .openingTime(branch.getOpeningTime() != null ? branch.getOpeningTime().toString() : null)
@@ -308,8 +320,10 @@ public class RestaurantService {
         branch.setPhone(request.getPhone());
         if (request.getCity() != null && !request.getCity().isBlank()) branch.setCity(request.getCity());
         branch.setDistrict(request.getDistrict());
-        branch.setLatitude(request.getLatitude());
-        branch.setLongitude(request.getLongitude());
+        branch.setGoogleMapsLink(request.getGoogleMapsLink());
+        var coordinates = GoogleMapsLinkParser.parse(request.getGoogleMapsLink());
+        branch.setLatitude(coordinates != null ? coordinates.latitude() : null);
+        branch.setLongitude(coordinates != null ? coordinates.longitude() : null);
         branch = branchRepository.save(branch);
 
         kafkaTemplate.send("branch.updated", buildBranchEvent(branch));
@@ -409,8 +423,8 @@ public class RestaurantService {
         }
 
 
-        if (usage.getCurrentTableCount() >= limits.getMaxTablesPerBranch()) {
-            throw new ReachedQuotaLimitException("Siz yanlız " + limits.getMaxTablesPerBranch() + "ədəd masa əlavə edə bilərsiniz!");
+        if (limits.getMaxTablesPerBranch() != -1 && usage.getCurrentTableCount() >= limits.getMaxTablesPerBranch()) {
+            throw new ReachedQuotaLimitException("Siz yanlız " + limits.getMaxTablesPerBranch() + " ədəd masa əlavə edə bilərsiniz!");
         }
 
         RestaurantTable table = RestaurantTable.builder().branch(branch).name(request.getName()).capacity(request.getCapacity()).zone(request.getZone()).type(request.getType()).build();
@@ -498,6 +512,9 @@ public class RestaurantService {
         var res = restaurantRepository.findRestaurantByOwnerId(userId).orElseThrow(() -> new NotFoundException("Restaurant not found!"));
 
         Map<String,String> imgUrl = mediaClient.upload(file).getData();
+        if (imgUrl == null || imgUrl.get("url") == null) {
+            throw new IllegalArgumentException("Şəkil yüklənmədi — fayl etibarlı şəkil deyil və ya yükləmə uğursuz oldu.");
+        }
 
 
         RestaurantImage img = RestaurantImage.builder()
@@ -515,6 +532,27 @@ public class RestaurantService {
         img = restaurantImageRepository.save(img);
 
         return img.getImageUrl();
+    }
+
+    public String uploadBranchImage(UUID userId, UUID branchId, MultipartFile file) {
+        var branch = branchRepository.findById(branchId)
+                .orElseThrow(() -> new NotFoundException("Filial tapılmadı!"));
+
+        if (!branch.getRestaurant().getOwnerId().equals(userId)) {
+            throw new NotFoundException("Filial tapılmadı!");
+        }
+
+        Map<String, String> imgUrl = mediaClient.upload(file).getData();
+        if (imgUrl == null || imgUrl.get("url") == null) {
+            throw new IllegalArgumentException("Şəkil yüklənmədi — fayl etibarlı şəkil deyil və ya yükləmə uğursuz oldu.");
+        }
+
+        branch.getPhotosUrl().add(imgUrl.get("url"));
+        branch = branchRepository.save(branch);
+
+        kafkaTemplate.send("branch.updated", buildBranchEvent(branch));
+
+        return imgUrl.get("url");
     }
 
 

@@ -4,7 +4,20 @@ import EmptyState from '../../components/EmptyState';
 import ErrorAlert from '../../components/ErrorAlert';
 import { getBranches, getTables, createTable, updateTable, deleteTable } from '../../api/restaurants';
 
-const emptyForm = { name: '', capacity: 4, zone: '' };
+const emptyForm = { name: '', capacity: 4, zone: '', type: 'SQUARE' };
+
+const TABLE_TYPES = [
+  { value: 'SQUARE', label: 'Kvadrat', icon: 'crop_square' },
+  { value: 'CIRCLE', label: 'Dairəvi', icon: 'circle' },
+  { value: 'RECTANGLE', label: 'Düzbucaqlı', icon: 'crop_landscape' },
+];
+
+// Masa forması üçün vizual sinif (kart görünüşü)
+const shapeClass = (type) => {
+  if (type === 'CIRCLE') return 'rounded-full aspect-square';
+  if (type === 'RECTANGLE') return 'rounded-lg aspect-[2/1]';
+  return 'rounded-lg aspect-square';
+};
 
 // Masaların idarəsi — filial seçilir, masalar say/ölçü/zona ilə əlavə olunur
 export default function Tables() {
@@ -53,7 +66,7 @@ export default function Tables() {
 
   const openEdit = (table) => {
     setEditing(table);
-    setForm({ name: table.name ?? '', capacity: table.capacity ?? 4, zone: table.zone ?? '' });
+    setForm({ name: table.name ?? '', capacity: table.capacity ?? 4, zone: table.zone ?? '', type: table.type ?? 'SQUARE' });
     setFormError(null);
     setModalOpen(true);
   };
@@ -158,10 +171,15 @@ export default function Tables() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
               {tables.map((t) => (
                 <div key={t.id} className="flex items-center justify-between p-4 bg-surface rounded-lg border border-outline-variant">
-                  <div>
-                    {t.zone && <span className="font-sans text-label-md text-primary">{t.zone}</span>}
-                    <h4 className="font-sans text-body-lg font-bold">{t.name}</h4>
-                    <p className="font-sans text-caption text-on-surface-variant">{t.capacity} nəfərlik</p>
+                  <div className="flex items-center gap-md">
+                    <div className={`w-12 h-12 shrink-0 bg-primary-fixed flex items-center justify-center text-primary ${shapeClass(t.type)}`}>
+                      <span className="material-symbols-outlined text-[20px]">table_restaurant</span>
+                    </div>
+                    <div>
+                      {t.zone && <span className="font-sans text-label-md text-primary">{t.zone}</span>}
+                      <h4 className="font-sans text-body-lg font-bold">{t.name}</h4>
+                      <p className="font-sans text-caption text-on-surface-variant">{t.capacity} nəfərlik</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
@@ -209,6 +227,26 @@ export default function Tables() {
                 <div className="space-y-xs">
                   <label className="font-sans text-label-md text-on-surface-variant">Zona</label>
                   <input type="text" value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })} placeholder="Zal, terras, VIP..." className={inputClass} />
+                </div>
+              </div>
+              <div className="space-y-xs">
+                <label className="font-sans text-label-md text-on-surface-variant">Masa forması</label>
+                <div className="grid grid-cols-3 gap-xs">
+                  {TABLE_TYPES.map((tt) => (
+                    <button
+                      key={tt.value}
+                      type="button"
+                      onClick={() => setForm({ ...form, type: tt.value })}
+                      className={`py-sm rounded-lg border flex flex-col items-center gap-xs transition-colors ${
+                        form.type === tt.value
+                          ? 'border-primary bg-primary-fixed text-primary'
+                          : 'border-outline-variant text-on-surface-variant hover:bg-surface-container'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[22px]">{tt.icon}</span>
+                      <span className="text-caption">{tt.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="pt-md flex gap-sm">

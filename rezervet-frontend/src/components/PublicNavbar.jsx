@@ -15,10 +15,11 @@ export default function PublicNavbar() {
       <nav className="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-16">
         <div className="flex items-center gap-md">
           <Link to="/" className="font-serif text-headline-md font-bold text-primary">
-            Rezervet
+            AsanRezerv
           </Link>
           <div className="hidden md:flex items-center gap-md ml-lg">
             <NavLink to="/" end className={navLinkClass}>Restoranlar</NavLink>
+            <NavLink to="/xerite" className={navLinkClass}>Xəritə</NavLink>
             <NavLink to="/qiymetler" className={navLinkClass}>Biznes üçün</NavLink>
             {user?.role === 'USER' && (
               <NavLink to="/rezervlerim" className={navLinkClass}>Rezervlərim</NavLink>

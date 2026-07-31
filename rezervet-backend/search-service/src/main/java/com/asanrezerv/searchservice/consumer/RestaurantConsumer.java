@@ -132,6 +132,7 @@ public class RestaurantConsumer {
                 .district(dto.getDistrict())
                 .address(dto.getAddress())
                 .location(location)
+                .photosUrl(dto.getPhotosUrl())
                 .minTableCapacity(dto.getMinTableCapacity() != null ? dto.getMinTableCapacity() : 0)
                 .maxTableCapacity(dto.getMaxTableCapacity() != null ? dto.getMaxTableCapacity() : 0)
                 .workingHours(dto.getOpeningTime() + " - " + dto.getClosingTime())

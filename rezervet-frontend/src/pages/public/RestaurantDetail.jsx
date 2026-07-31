@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import PublicNavbar from '../../components/PublicNavbar';
 import Footer from '../../components/Footer';
 import Spinner from '../../components/Spinner';
@@ -24,6 +24,11 @@ export default function RestaurantDetail() {
   const [selectedBranch, setSelectedBranch] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('19:00');
+  const selectedBranchHours = (() => {
+    const b = branches.find((br) => String(br.id) === String(selectedBranch));
+    const match = /^(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/.exec(b?.workingHours ?? '');
+    return match ? { open: match[1], close: match[2] } : null;
+  })();
   const [partySize, setPartySize] = useState(2);
   const [searched, setSearched] = useState(false);       // yoxlama edilibmi
   const [availableTableId, setAvailableTableId] = useState(null); // uyğun masanın UUID-si (yoxdursa null)
@@ -90,6 +95,7 @@ export default function RestaurantDetail() {
       await reserveTable({
         guestName: user?.fullName || 'Qonaq',
         guestCount: Number(partySize),
+        note,
         duration: 120, // default duration (minutes)
         restaurantId: id,
         branchId: selectedBranch,
@@ -215,6 +221,8 @@ export default function RestaurantDetail() {
                 <input
                   type="time"
                   required
+                  min={selectedBranchHours?.open}
+                  max={selectedBranchHours?.close}
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                   className="w-full px-sm py-sm bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-body-md text-on-surface"
@@ -229,6 +237,11 @@ export default function RestaurantDetail() {
                   ))}
                 </select>
               </div>
+              {selectedBranchHours && (
+                <p className="text-caption text-on-surface-variant px-xs">
+                  İş saatları: {selectedBranchHours.open}–{selectedBranchHours.close}
+                </p>
+              )}
             </div>
             <button
               type="submit"
@@ -313,9 +326,17 @@ export default function RestaurantDetail() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
               {branches.map((b) => (
-                <div key={b.id} className="bg-surface-container-low rounded-xl border border-outline-variant p-md flex items-start gap-md">
-                  <div className="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-primary">storefront</span>
+                <Link
+                  to={`/filial/${b.id}`}
+                  key={b.id}
+                  className="bg-surface-container-low rounded-xl border border-outline-variant p-md flex items-start gap-md hover:border-primary transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0 overflow-hidden">
+                    {b.photosUrl?.[0] ? (
+                      <img src={b.photosUrl[0]} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-primary">storefront</span>
+                    )}
                   </div>
                   <div>
                     <h3 className="font-serif text-title-lg text-on-surface">{b.branchName}</h3>
@@ -338,7 +359,7 @@ export default function RestaurantDetail() {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

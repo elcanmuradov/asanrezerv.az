@@ -9,5 +9,8 @@ export const getAiSummary = () => client.get('/ai/summary');
 // Level >= 2: { days: [{ date, weekday, expectedReservations }] }
 export const getAiForecast = () => client.get('/ai/forecast');
 
-// Level >= 2: { narrative, llmGenerated, recommendations[] }
+// Level >= 2: { narrative, llmGenerated, recommendations[] } (qayda-əsaslı, LLM YOX)
 export const getAiInsights = () => client.get('/ai/insights');
+
+// Level >= 3: { narrative, llmGenerated, recommendations[] } (DeepSeek ilə dərin analiz)
+export const getAiDeepInsights = () => client.get('/ai/deep-insights');

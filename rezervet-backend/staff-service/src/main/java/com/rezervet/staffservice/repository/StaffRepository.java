@@ -12,4 +12,6 @@ public interface StaffRepository extends JpaRepository<StaffAssignment, UUID> {
     Optional<StaffAssignment> findStaffAssignmentByUserId(UUID userId);
 
     List<StaffAssignment> findStaffAssignmentsByRole(StaffRole role);
+
+    List<StaffAssignment> findStaffAssignmentsByRoleAndBranchIdIn(StaffRole role, List<UUID> branchIds);
 }

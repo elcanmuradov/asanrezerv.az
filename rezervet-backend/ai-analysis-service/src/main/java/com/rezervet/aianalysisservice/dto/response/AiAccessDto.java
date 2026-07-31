@@ -11,8 +11,9 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class AiAccessDto {
-    private int level;              // 0 / 1 / 2
+    private int level;              // 0 / 1 / 2 / 3
     private boolean canBasic;       // level >= 1
     private boolean canAdvanced;    // level >= 2
+    private boolean canDeep;        // level >= 3 (DeepSeek ilə dərin analiz)
     private List<String> features;  // aktiv feature adları
 }

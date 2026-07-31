@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Spinner from '../../components/Spinner';
 import ErrorAlert from '../../components/ErrorAlert';
 import EmptyState from '../../components/EmptyState';
-import { getAiAccess, getAiSummary, getAiForecast, getAiInsights } from '../../api/ai';
+import { getAiAccess, getAiSummary, getAiForecast, getAiInsights, getAiDeepInsights } from '../../api/ai';
 
 const WEEKDAY_LABELS = {
   MONDAY: 'B.e', TUESDAY: 'Ç.a', WEDNESDAY: 'Çərşənbə',
@@ -35,6 +35,10 @@ export default function AiInsights() {
         if (acc?.canAdvanced) {
           const [{ data: f }, { data: i }] = await Promise.all([getAiForecast(), getAiInsights()]);
           if (active) { setForecast(f); setInsights(i); }
+        }
+        if (acc?.canDeep) {
+          const { data: di } = await getAiDeepInsights();
+          if (active) setInsights(di);
         }
       } catch (err) {
         if (active) setError(err);
@@ -87,6 +91,13 @@ export default function AiInsights() {
             <StatCard label="Ümumi tutum" value={summary.totalCapacity != null ? `${summary.totalCapacity} yer` : '—'} />
             <StatCard label="Orta doluluq" value={`${summary.avgOccupancyPercent ?? 0}%`} />
             <StatCard label="İmtina dərəcəsi" value={`${Math.round((summary.noShowRate ?? 0) * 100)}%`} />
+            {summary.reservationsGrowthPercent != null && (
+              <StatCard
+                label="Aylıq artım"
+                value={`${summary.reservationsGrowthPercent >= 0 ? '+' : ''}${summary.reservationsGrowthPercent}%`}
+                positive={summary.reservationsGrowthPercent >= 0}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-md">
@@ -185,8 +196,8 @@ export default function AiInsights() {
           <div className="flex items-center gap-md">
             <span className="material-symbols-outlined text-primary text-[32px]">auto_awesome</span>
             <div>
-              <h3 className="font-sans text-title-lg">Proqnoz və LLM tövsiyələri yüksək paketdədir</h3>
-              <p className="font-sans text-body-md text-on-surface-variant">Növbəti günlərin tələb proqnozu və süni intellekt tövsiyələri üçün paketi yüksəldin.</p>
+              <h3 className="font-sans text-title-lg">Proqnoz və artım statistikası yüksək paketdədir</h3>
+              <p className="font-sans text-body-md text-on-surface-variant">Növbəti günlərin tələb proqnozu və aylıq artım faizi üçün paketi yüksəldin.</p>
             </div>
           </div>
           <button
@@ -220,13 +231,32 @@ export default function AiInsights() {
         </section>
       )}
 
-      {/* Səviyyə 2 — insight/LLM */}
+      {/* Səviyyə 2-də, 3 olmadıqda — DeepSeek yüksəlt təklifi */}
+      {access?.canAdvanced && !access?.canDeep && (
+        <div className="bg-surface-container-high border border-outline-variant rounded-xl p-lg flex items-center justify-between gap-md flex-wrap">
+          <div className="flex items-center gap-md">
+            <span className="material-symbols-outlined text-primary text-[32px]">psychology</span>
+            <div>
+              <h3 className="font-sans text-title-lg">AI ilə dərin analiz yüksək paketdədir</h3>
+              <p className="font-sans text-body-md text-on-surface-variant">DeepSeek süni intellekti ilə hazırlanan təbii dildə hesabat üçün paketi yüksəldin.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/manager/abune')}
+            className="px-md py-2 border border-primary text-primary rounded-xl font-sans text-label-md hover:bg-primary-fixed transition-colors shrink-0"
+          >
+            Yüksəlt
+          </button>
+        </div>
+      )}
+
+      {/* Səviyyə 2 (qayda-əsaslı) / Səviyyə 3 (DeepSeek) — insight */}
       {insights && (
         <section className="bg-inverse-surface text-inverse-on-surface rounded-xl p-lg space-y-md">
           <div className="flex items-center gap-sm">
             <span className="material-symbols-outlined text-primary-fixed">auto_awesome</span>
             <h3 className="font-serif text-title-lg">
-              {insights.llmGenerated ? 'AI hesabatı' : 'Analitik xülasə'}
+              {insights.llmGenerated ? 'AI hesabatı (DeepSeek)' : 'Analitik xülasə'}
             </h3>
           </div>
           <p className="font-sans text-body-md opacity-90 whitespace-pre-line">{insights.narrative}</p>
@@ -246,11 +276,13 @@ export default function AiInsights() {
   );
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, positive }) {
   return (
     <div className="bg-surface border border-outline-variant rounded-xl p-md">
       <p className="font-sans text-label-md text-on-surface-variant">{label}</p>
-      <h5 className="font-serif text-headline-md text-primary">{value}</h5>
+      <h5 className={`font-serif text-headline-md ${positive === undefined ? 'text-primary' : positive ? 'text-green-600' : 'text-error'}`}>
+        {value}
+      </h5>
     </div>
   );
 }

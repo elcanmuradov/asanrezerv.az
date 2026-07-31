@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 // restaurant-service-in "branch.created" / "branch.updated" topic-lərinə göndərdiyi
@@ -24,6 +25,7 @@ public class BranchDto {
     private String address;
     private Double latitude;
     private Double longitude;
+    private List<String> photosUrl;
 
     private Integer minTableCapacity;
     private Integer maxTableCapacity;

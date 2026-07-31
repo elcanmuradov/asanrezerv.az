@@ -110,7 +110,7 @@ export default function Home() {
                 className="group bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant hover:shadow-lg transition-all duration-300 flex flex-col"
               >
                 <div className="relative h-48 overflow-hidden bg-surface-container-highest">
-                  { (r.bannerUrl || r.profilePhotoUrl || r.mediaAssets?.bannerUrl || r.mediaAssets?.profilePhotoUrl || r.coverImageUrl) ? (
+                  {(r.bannerUrl || r.profilePhotoUrl || r.mediaAssets?.bannerUrl || r.mediaAssets?.profilePhotoUrl || r.coverImageUrl) ? (
                     <img
                       src={r.bannerUrl || r.profilePhotoUrl || r.mediaAssets?.bannerUrl || r.mediaAssets?.profilePhotoUrl || r.coverImageUrl}
                       alt={r.name}
@@ -164,7 +164,7 @@ export default function Home() {
             Restoran sahibisiniz?
           </h2>
           <p className="font-sans text-body-lg mb-lg max-w-2xl opacity-90">
-            Rezervet ilə masalarınızı, filiallarınızı və rezervlərinizi bir paneldən idarə edin.
+            AsanRezerv ilə masalarınızı, filiallarınızı və rezervlərinizi bir paneldən idarə edin.
           </p>
           <div className="flex flex-wrap justify-center gap-md">
             <Link to="/biznes/register" className="px-xl py-4 bg-background text-primary rounded-xl font-sans text-label-md hover:shadow-xl transition-all">

@@ -14,6 +14,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 @Service
 @RequiredArgsConstructor
 public class SearchService {
@@ -32,11 +37,13 @@ public class SearchService {
         return branchSearchRepository.findByRestaurantId(restaurantId, pageable);
     }
 
-    @Cacheable(
-            value = "catalog",
-            key = "'restaurants:page:' + #page + ':size:' + #size",
-            unless = "#result == null || #result.isEmpty()"
-    )
+    public BranchDocument getBranchById(String id) {
+        return branchSearchRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Filial tapılmadı"));
+    }
+
+    // DİQQƏT: Page<T> (PageImpl) daxilində Pageable sahəsi var — Jackson Redis-dən oxuyanda
+    // abstrakt Pageable-i bərpa edə bilmir, ona görə burada cache-lənmir (bax: getRestaurantById).
     public Page<RestaurantDocument> getRestaurants(Pageable pageable) {
          return restaurantSearchRepository.findByVisibilityLevelGreaterThanAndPublicationStatus(0, "PUBLISHED", pageable);
     }
@@ -45,6 +52,19 @@ public class SearchService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "visibilityLevel"));
         return restaurantSearchRepository.findByPublicationStatusAndNameContainingIgnoreCaseOrPublicationStatusAndDescriptionContainingIgnoreCaseAndVisibilityLevelGreaterThan(
                 "PUBLISHED", query, "PUBLISHED", query, 0, pageable);
+    }
+
+    public List<BranchDocument> getMapBranches() {
+        Set<String> publishedRestaurantIds = StreamSupport
+                .stream(restaurantSearchRepository.findAll(PageRequest.of(0, 1000)).spliterator(), false)
+                .filter(r -> "PUBLISHED".equals(r.getPublicationStatus()))
+                .map(RestaurantDocument::getId)
+                .collect(Collectors.toSet());
+
+        return StreamSupport
+                .stream(branchSearchRepository.findAll(PageRequest.of(0, 1000)).spliterator(), false)
+                .filter(b -> b.getLocation() != null && publishedRestaurantIds.contains(b.getRestaurantId()))
+                .toList();
     }
 
 //    public Page<RestaurantDocument> filterRestaurants(

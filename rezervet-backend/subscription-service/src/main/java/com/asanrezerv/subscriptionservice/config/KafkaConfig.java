@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
@@ -47,6 +48,8 @@ public class KafkaConfig {
         props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,"java.util.UUID");
         props.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class);
         return new DefaultKafkaConsumerFactory<>(props);
 
     }
@@ -71,6 +74,8 @@ public class KafkaConfig {
         props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,"com.asanrezerv.subscriptionservice.dto.kafka.RestaurantDto");
         props.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class);
         return new DefaultKafkaConsumerFactory<>(props);
 
     }
@@ -95,6 +100,8 @@ public class KafkaConfig {
         props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,"com.asanrezerv.subscriptionservice.dto.kafka.TableCreationEvent");
         props.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class);
         return new DefaultKafkaConsumerFactory<>(props);
 
     }
@@ -119,6 +126,10 @@ public class KafkaConfig {
         props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
         props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,"com.asanrezerv.subscriptionservice.dto.kafka.BranchCreationEvent");
         props.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+
+
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class);
 
         return new DefaultKafkaConsumerFactory<>(props);
 

@@ -16,7 +16,20 @@ public class StaffDto {
 
     private UUID branchId;
 
+    private String fullName;
+
+    private String email;
+
+    private BranchSummary branch;
+
     private StaffRole role;
 
     private LocalDateTime createdAt;
+
+    @Data
+    @Builder
+    public static class BranchSummary {
+        private UUID id;
+        private String name;
+    }
 }

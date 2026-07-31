@@ -29,6 +29,11 @@ public class StaffAssignment {
 
     private UUID branchId;
 
+    // auth-service-dən yaradılış anında kopyalanır (hər dəfə join etməmək üçün).
+    private String fullName;
+
+    private String email;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StaffRole role;

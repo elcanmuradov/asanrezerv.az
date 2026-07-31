@@ -46,7 +46,7 @@ export default function Login({ mode = 'user' }) {
     <div className="min-h-screen bg-background flex items-center justify-center px-gutter">
       <div className="w-full max-w-md">
         <div className="text-center mb-lg">
-          <Link to="/" className="font-serif text-display-lg-mobile font-bold text-primary">Rezervet</Link>
+          <Link to="/" className="font-serif text-display-lg-mobile font-bold text-primary">AsanRezerv</Link>
           {isBusiness && (
             <div className="inline-flex items-center gap-xs bg-primary-container text-on-primary-container px-md py-1.5 rounded-full font-sans text-label-md mt-sm mx-auto w-fit block">
               <span className="material-symbols-outlined text-[18px]">storefront</span>

@@ -23,7 +23,11 @@ public class ReservationDto {
 
     private String guestName;
 
+    private String guestPhone;
+
     private Integer guestCount;
+
+    private String note;
 
     private UUID guestId;
 
@@ -31,11 +35,17 @@ public class ReservationDto {
 
     private UUID branchId;
 
+    private String branchName;
+
     private UUID tableId;
+
+    private String tableName;
 
     private LocalDate date;
 
     private LocalTime startTime;
+
+    private LocalTime endTime;
 
     private ReservationStatus status;
 

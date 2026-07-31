@@ -55,6 +55,8 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
             new PublicRoute(HttpMethod.GET, "^/api/search/restaurants/search/?$"),
             new PublicRoute(HttpMethod.GET, "^/api/search/restaurants/[0-9a-fA-F-]{36}/?$"),
             new PublicRoute(HttpMethod.GET, "^/api/search/restaurants/[0-9a-fA-F-]{36}/branches/?$"),
+            new PublicRoute(HttpMethod.GET, "^/api/search/map/branches/?$"),
+            new PublicRoute(HttpMethod.GET, "^/api/search/branches/[0-9a-fA-F-]{36}/?$"),
             new PublicRoute(null, "^/actuator(/.*)?$"),
             new PublicRoute(null, "^/oauth2/(.*)?$"),
             new PublicRoute(null, "^/login/oauth2/(.*)?$")

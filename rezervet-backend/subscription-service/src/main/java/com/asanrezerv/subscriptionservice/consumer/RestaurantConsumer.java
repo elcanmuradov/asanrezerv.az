@@ -23,7 +23,6 @@ public class RestaurantConsumer {
     @KafkaListener(topics = "restaurant.created",containerFactory = "restaurant")
     public void createRestaurantSubs(RestaurantDto dto) {
         var usage = RestaurantQuotaUsage.builder().restaurantId(dto.getId()).currentBranchCount(0).build();
-
         restaurantUsageRepository.save(usage);
     }
 
@@ -34,23 +33,20 @@ public class RestaurantConsumer {
         if(opt.isEmpty()){
             throw new NotFoundException("No such branch");
         }
-
         var usage = opt.get();
-
         usage.setCurrentTableCount(usage.getCurrentTableCount() - 1);
         branchUsageRepository.save(usage);
 
     }
 
-    @KafkaListener(topics = "branch.deleted",containerFactory = "restaurant")
-    public void branchDeleted(RestaurantDto dto) {
-        var opt= restaurantUsageRepository.findRestaurantQuotaUsageByRestaurantId(dto.getId());
+    // restaurant-service bu topic-ə RestaurantDto YOX, restoranın raw UUID-sini göndərir.
+    @KafkaListener(topics = "branch.deleted",containerFactory = "uuid")
+    public void branchDeleted(UUID restaurantId) {
+        var opt= restaurantUsageRepository.findRestaurantQuotaUsageByRestaurantId(restaurantId);
         if(opt.isEmpty()){
             throw new NotFoundException("No such branch");
         }
-
         var usage = opt.get();
-
         usage.setCurrentBranchCount(usage.getCurrentBranchCount() - 1);
         restaurantUsageRepository.save(usage);
 
@@ -70,7 +66,11 @@ public class RestaurantConsumer {
        usage.setCurrentBranchCount(usage.getCurrentBranchCount() + 1);
        restaurantUsageRepository.save(usage);
 
-       var branchUsage = BranchQuotaUsage.builder().branchId(event.getBranchId()).restaurantId(event.getRestaurantId()).currentTableCount(0).build();
+       var branchUsage = BranchQuotaUsage.builder()
+               .branchId(event.getBranchId())
+               .restaurantId(event.getRestaurantId())
+               .currentTableCount(0)
+               .build();
        branchUsageRepository.save(branchUsage);
 
     }

@@ -26,6 +26,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    // JDK-in default Feign client-i (HttpURLConnection) PATCH metodunu dəstəkləmir —
+    // restaurant-service-ə PATCH sorğuları (masa statusu) buna görə OkHttp ilə göndərilir.
+    implementation 'io.github.openfeign:feign-okhttp'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'

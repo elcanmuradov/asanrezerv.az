@@ -18,6 +18,8 @@ public class BranchMapper {
                 .district(branch.getDistrict())
                 .latitude(branch.getLatitude())
                 .longitude(branch.getLongitude())
+                .googleMapsLink(branch.getGoogleMapsLink())
+                .photosUrl(branch.getPhotosUrl())
                 .openingTime(branch.getOpeningTime())
                 .closingTime(branch.getClosingTime())
                 .createdAt(branch.getCreatedAt())

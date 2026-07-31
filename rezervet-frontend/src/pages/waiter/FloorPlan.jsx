@@ -13,7 +13,14 @@ const STATUSES = {
   CLEANING: { label: 'Təmizlənir', dot: 'bg-outline', card: 'bg-surface-container border border-outline', icon: 'cleaning_services' },
 };
 
-const emptyManualForm = { guestName: '', guestPhone: '', partySize: 2, date: '', time: '', tableId: '', note: '' };
+const emptyManualForm = { guestName: '', guestPhone: '', guestCount: 2, date: '', startTime: '', tableId: '', note: '' };
+
+// Masa forması — backend-dəki TableType-a uyğun vizual sinif
+const shapeClass = (type) => {
+  if (type === 'CIRCLE') return 'rounded-full';
+  if (type === 'RECTANGLE') return 'rounded-2xl';
+  return 'rounded-xl';
+};
 
 export default function FloorPlan() {
   const [branch, setBranch] = useState(null); // ofisiant tək filiala təyin olunur
@@ -84,10 +91,16 @@ export default function FloorPlan() {
     setManualSaving(true);
     try {
       await createManualReservation({
-        branchId: Number(branchId),
-        ...manualForm,
-        tableId: manualForm.tableId ? Number(manualForm.tableId) : undefined,
-        partySize: Number(manualForm.partySize),
+        restaurantId: branch?.restaurantId,
+        branchId,
+        guestName: manualForm.guestName,
+        guestPhone: manualForm.guestPhone,
+        guestCount: Number(manualForm.guestCount),
+        date: manualForm.date,
+        startTime: manualForm.startTime,
+        note: manualForm.note,
+        tableId: manualForm.tableId || undefined,
+        duration: 120,
       });
       setManualOpen(false);
       setManualForm(emptyManualForm);
@@ -170,7 +183,7 @@ export default function FloorPlan() {
                     <button
                       key={t.id}
                       onClick={() => setSelectedTable(t)}
-                      className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-xs shadow-sm hover:scale-105 transition-transform ${s.card} ${
+                      className={`${t.type === 'RECTANGLE' ? 'aspect-[2/1] col-span-2' : 'aspect-square'} ${shapeClass(t.type)} flex flex-col items-center justify-center gap-xs shadow-sm hover:scale-105 transition-transform ${s.card} ${
                         selectedTable?.id === t.id ? 'ring-2 ring-primary ring-offset-2' : ''
                       }`}
                     >
@@ -232,11 +245,11 @@ export default function FloorPlan() {
               <div className="space-y-base">
                 {todayReservations.map((r) => (
                   <div key={r.id} className="flex items-center gap-md py-sm border-b border-outline-variant last:border-0">
-                    <div className="font-bold text-primary">{r.time}</div>
+                    <div className="font-bold text-primary">{r.startTime}</div>
                     <div className="flex-1">
-                      <p className="font-sans text-label-md">{r.guestName ?? r.userFullName}</p>
+                      <p className="font-sans text-label-md">{r.guestName}</p>
                       <p className="font-sans text-caption text-on-surface-variant">
-                        {r.partySize} nəfər{r.tableName ? ` • ${r.tableName}` : ''}
+                        {r.guestCount} nəfər{r.tableName ? ` • ${r.tableName}` : ''}
                         {r.source === 'MANUAL' ? ' • Əl ilə' : ''}
                       </p>
                     </div>
@@ -274,7 +287,7 @@ export default function FloorPlan() {
               <div className="grid grid-cols-3 gap-md">
                 <div className="space-y-xs">
                   <label className="font-sans text-label-md text-on-surface-variant">Qonaq sayı</label>
-                  <input type="number" required min={1} max={50} value={manualForm.partySize} onChange={(e) => setManualForm({ ...manualForm, partySize: e.target.value })} className={inputClass} />
+                  <input type="number" required min={1} max={50} value={manualForm.guestCount} onChange={(e) => setManualForm({ ...manualForm, guestCount: e.target.value })} className={inputClass} />
                 </div>
                 <div className="space-y-xs">
                   <label className="font-sans text-label-md text-on-surface-variant">Tarix</label>
@@ -282,9 +295,22 @@ export default function FloorPlan() {
                 </div>
                 <div className="space-y-xs">
                   <label className="font-sans text-label-md text-on-surface-variant">Saat</label>
-                  <input type="time" required value={manualForm.time} onChange={(e) => setManualForm({ ...manualForm, time: e.target.value })} className={inputClass} />
+                  <input
+                    type="time"
+                    required
+                    min={branch?.openingTime}
+                    max={branch?.closingTime}
+                    value={manualForm.startTime}
+                    onChange={(e) => setManualForm({ ...manualForm, startTime: e.target.value })}
+                    className={inputClass}
+                  />
                 </div>
               </div>
+              {branch?.openingTime && (
+                <p className="font-sans text-caption text-on-surface-variant -mt-xs">
+                  İş saatları: {branch.openingTime}–{branch.closingTime}
+                </p>
+              )}
               <div className="space-y-xs">
                 <label className="font-sans text-label-md text-on-surface-variant">Masa (istəyə bağlı)</label>
                 <select value={manualForm.tableId} onChange={(e) => setManualForm({ ...manualForm, tableId: e.target.value })} className={inputClass}>

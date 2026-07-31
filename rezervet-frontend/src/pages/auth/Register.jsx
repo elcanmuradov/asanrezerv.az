@@ -126,7 +126,7 @@ export default function Register({ mode = 'user' }) {
     <div className="min-h-screen bg-background flex items-center justify-center px-gutter py-lg">
       <div className="w-full max-w-md">
         <div className="text-center mb-lg">
-          <Link to="/" className="font-serif text-display-lg-mobile font-bold text-primary">Rezervet</Link>
+          <Link to="/" className="font-serif text-display-lg-mobile font-bold text-primary">AsanRezerv</Link>
           {isBusiness && (
             <div className="inline-flex items-center gap-xs bg-primary-container text-on-primary-container px-md py-1.5 rounded-full font-sans text-label-md mt-sm">
               <span className="material-symbols-outlined text-[18px]">storefront</span>
@@ -143,13 +143,12 @@ export default function Register({ mode = 'user' }) {
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-base">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-sans text-label-md ${
-                  s < step
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-sans text-label-md ${s < step
                     ? 'bg-primary text-on-primary'
                     : s === step
-                    ? 'bg-primary-container text-on-primary-container'
-                    : 'bg-surface-container text-on-surface-variant'
-                }`}
+                      ? 'bg-primary-container text-on-primary-container'
+                      : 'bg-surface-container text-on-surface-variant'
+                  }`}
               >
                 {s < step ? <span className="material-symbols-outlined text-[18px]">check</span> : s}
               </div>

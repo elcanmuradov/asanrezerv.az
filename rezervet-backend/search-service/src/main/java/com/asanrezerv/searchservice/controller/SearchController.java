@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
@@ -41,6 +43,12 @@ public class SearchController {
         return ResponseEntity.ok(ApiResponse.success(searchService.getRestaurantById(id)));
     }
 
+    // Xəritə səhifəsi üçün: koordinatı olan bütün (dərc olunmuş) filiallar. Login tələb olunmur.
+    @GetMapping("/map/branches")
+    public ResponseEntity<ApiResponse<List<BranchDocument>>> getMapBranches() {
+        return ResponseEntity.ok(ApiResponse.success(searchService.getMapBranches()));
+    }
+
     // Bir restoranın bütün filialları (frontend-in restoran səhifəsindəki filial siyahısı üçün)
     @GetMapping("/restaurants/{id}/branches")
     public ResponseEntity<ApiResponse<Page<BranchDocument>>> getBranchesByRestaurant(
@@ -48,6 +56,12 @@ public class SearchController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success(searchService.getBranchesByRestaurant(id, page, size)));
+    }
+
+    // Tək filialın öz səhifəsi üçün (şəkillər, ünvan, iş saatları). Login tələb olunmur.
+    @GetMapping("/branches/{id}")
+    public ResponseEntity<ApiResponse<BranchDocument>> getBranchById(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(searchService.getBranchById(id)));
     }
 
 }

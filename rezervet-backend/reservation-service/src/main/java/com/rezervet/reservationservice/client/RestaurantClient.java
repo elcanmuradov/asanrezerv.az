@@ -1,6 +1,7 @@
 package com.rezervet.reservationservice.client;
 
 import com.rezervet.reservationservice.dto.ApiResponse;
+import com.rezervet.reservationservice.dto.restaurant.BranchDto;
 import com.rezervet.reservationservice.dto.restaurant.TableDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,5 +15,11 @@ import java.util.UUID;
 public interface RestaurantClient {
     @GetMapping("/branches/{branchId}/tables")
     ApiResponse<List<TableDto>>  getTablesByBranchId(@RequestHeader("X-User-Id") UUID userId, @PathVariable UUID branchId);
+
+    @GetMapping("/{id}/branches")
+    ApiResponse<List<BranchDto>> getBranchesByRestaurant(@PathVariable UUID id);
+
+    @GetMapping("/branches/{id}")
+    ApiResponse<BranchDto> getBranchById(@PathVariable UUID id);
 
 }
