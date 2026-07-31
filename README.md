@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Rezervet.az
 
 Restoranlar üçün onlayn rezervasiya platforması — mikroservis backend (Spring Boot) + React frontend.
@@ -52,3 +53,6 @@ Frontend nginx `/api/*` sorğularını daxili şəbəkədən api-gateway-ə prox
 - **Java 26 image:** Dockerfile-lar `eclipse-temurin:26-jdk` istifadə edir. Əgər bu tag hələ mövcud deyilsə `25-jdk`-ya endir (build.gradle toolchain-i də).
 - `.env` faylındakı `JWT_SECRET` **auth-service və api-gateway-də eyni** olmalıdır (compose bunu avtomatik hər ikisinə ötürür).
 ```
+=======
+# asanrezerv.az
+>>>>>>> d2150f53709421dbe96d03c16714399f9cfc9927
