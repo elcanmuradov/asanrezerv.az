@@ -155,6 +155,7 @@ public class SubscriptionService {
                 .mostPopular(plan.isMostPopular())
                 .features(plan.getFeatures())
                 .visibilityLevel(plan.getVisibilityLevel())
+                .aiAnalysisLevel(plan.getAiAnalysisLevel())
                 .build();
     }
 
@@ -163,6 +164,7 @@ public class SubscriptionService {
                 .id(subscription.getId())
                 .restaurantId(subscription.getRestaurantId())
                 .planId(subscription.getPlan().getId())
+                .planName(subscription.getPlan().getName())
                 .startDate(subscription.getStartDate())
                 .endDate(subscription.getEndDate())
                 .status(subscription.getStatus())

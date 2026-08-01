@@ -11,3 +11,8 @@ spring:
   kafka:
     producer:
       bootstrap-servers: kafka:9092
+  client:
+    urls:
+      restaurant-service: http://restaurant-service:8080
+      auth-service: http://auth-service:8080
+      reservation-service: http://reservation-service:8080

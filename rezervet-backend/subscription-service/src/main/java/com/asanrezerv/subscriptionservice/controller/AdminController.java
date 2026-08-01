@@ -1,6 +1,8 @@
 package com.asanrezerv.subscriptionservice.controller;
 
 import com.asanrezerv.subscriptionservice.dto.ApiResponse;
+import com.asanrezerv.subscriptionservice.dto.controller.AdminStatsDto;
+import com.asanrezerv.subscriptionservice.dto.controller.AdminSubscriptionDto;
 import com.asanrezerv.subscriptionservice.dto.controller.PlanDto;
 import com.asanrezerv.subscriptionservice.dto.controller.PlanRequest;
 import com.asanrezerv.subscriptionservice.service.AdminService;
@@ -31,6 +33,16 @@ public class AdminController {
     @PostMapping("/plans")
     public ResponseEntity<ApiResponse<PlanDto>> createPlan(@RequestBody PlanRequest request) {
         return ResponseEntity.ok(ApiResponse.success(adminService.create(request)));
+    }
+
+    @GetMapping("/subscriptions")
+    public ResponseEntity<ApiResponse<List<AdminSubscriptionDto>>> getSubscriptions() {
+        return ResponseEntity.ok(ApiResponse.success(adminService.getSubscriptions()));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<AdminStatsDto>> getStats() {
+        return ResponseEntity.ok(ApiResponse.success(adminService.getStats()));
     }
 
 }

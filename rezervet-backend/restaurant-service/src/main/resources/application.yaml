@@ -13,6 +13,8 @@ spring:
       url: http://subscription-service:8080
     media-service:
       url: http://media-service:8080
+    auth-service:
+      url: http://auth-service:8080
 
   kafka:
     producer:

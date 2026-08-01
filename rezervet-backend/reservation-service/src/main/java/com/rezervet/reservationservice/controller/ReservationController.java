@@ -67,5 +67,10 @@ public class ReservationController {
         return ResponseEntity.ok(ApiResponse.success(reservationService.getUserReservations(userId)));
     }
 
+    // Platforma-geniş statistika üçün (admin/api/admin/stats) — Docker daxili şəbəkədən çağırılır.
+    @GetMapping("/count/monthly")
+    public ResponseEntity<ApiResponse<Long>> countThisMonth() {
+        return ResponseEntity.ok(ApiResponse.success(reservationService.countThisMonth()));
+    }
 
 }

@@ -153,6 +153,19 @@ public class AuthService {
         return userMapper.toDto(opt.get());
     }
 
+    // Digər servislərin (restaurant-service admin siyahısı, subscription-service stats) daxili çağırışı üçün.
+    public UserDto getUserById(java.util.UUID id) {
+        var opt = authRepository.findUserById(id);
+        if (opt.isEmpty()) {
+            throw new NotFoundException("Istifadəçi tapılmadı!");
+        }
+        return userMapper.toDto(opt.get());
+    }
+
+    public long countUsers() {
+        return authRepository.count();
+    }
+
     public AuthResponse refresh(RefreshTokenRequest request) {
         String refreshKey = "refresh_token:" + request.getRefreshToken();
         String email = redisTemplate.opsForValue().get(refreshKey);

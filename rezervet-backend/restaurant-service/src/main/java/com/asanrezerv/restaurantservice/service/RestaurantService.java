@@ -1,5 +1,6 @@
 package com.asanrezerv.restaurantservice.service;
 
+import com.asanrezerv.restaurantservice.client.AuthClient;
 import com.asanrezerv.restaurantservice.client.MediaClient;
 import com.asanrezerv.restaurantservice.client.SubscriptionClient;
 import com.asanrezerv.restaurantservice.dto.branch.BranchDto;
@@ -9,6 +10,7 @@ import com.asanrezerv.restaurantservice.dto.clients.subscription.QuotaLimits;
 import com.asanrezerv.restaurantservice.dto.clients.subscription.RestaurantQuotaUsage;
 import com.asanrezerv.restaurantservice.dto.kafka.BranchEventDto;
 import com.asanrezerv.restaurantservice.dto.kafka.TableCreationEvent;
+import com.asanrezerv.restaurantservice.dto.restaurant.AdminRestaurantDto;
 import com.asanrezerv.restaurantservice.dto.restaurant.RestaurantDto;
 import com.asanrezerv.restaurantservice.dto.restaurant.request.RestaurantRequest;
 import com.asanrezerv.restaurantservice.dto.table.TableDto;
@@ -19,7 +21,9 @@ import com.asanrezerv.restaurantservice.entity.RestaurantImage;
 import com.asanrezerv.restaurantservice.entity.RestaurantTable;
 import com.asanrezerv.restaurantservice.enums.PhotoType;
 import com.asanrezerv.restaurantservice.enums.PublicationStatus;
+import com.asanrezerv.restaurantservice.enums.RestaurantStatus;
 import com.asanrezerv.restaurantservice.enums.TableStatus;
+import lombok.extern.slf4j.Slf4j;
 import com.asanrezerv.restaurantservice.exception.NotFoundException;
 import com.asanrezerv.restaurantservice.exception.ReachedQuotaLimitException;
 import com.asanrezerv.restaurantservice.mapper.BranchMapper;
@@ -43,6 +47,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RestaurantService {
@@ -58,6 +63,7 @@ public class RestaurantService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final MediaClient mediaClient;
     private final RestaurantImageRepository restaurantImageRepository;
+    private final AuthClient authClient;
 
 
     public RestaurantDto getRestaurantById(UUID id) {
@@ -89,7 +95,9 @@ public class RestaurantService {
         String s = (search == null || search.isBlank()) ? null : "%" + search.trim().toLowerCase() + "%";
         String c = (city == null || city.isBlank()) ? null : city.trim().toLowerCase();
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "visibilityRank"));
+        // DİQQƏT: entity-də "visibilityRank" sahəsi yoxdur (görünmə sıralaması search-service-in
+        // Elasticsearch indeksində, visibilityLevel əsasında hesablanır) — burada sadəcə tarixə görə sırala.
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return restaurantRepository.search(s, c, pageable).stream().map(restaurantMapper::toRestaurantDto).toList();
     }
 
@@ -555,5 +563,53 @@ public class RestaurantService {
         return imgUrl.get("url");
     }
 
+    // ---- Admin ----
+
+    public List<AdminRestaurantDto> getAdminRestaurants() {
+        return restaurantRepository.findAll().stream().map(r -> {
+            String ownerName = null;
+            String ownerEmail = null;
+            try {
+                var res = authClient.getUserById(r.getOwnerId());
+                if (res != null && res.getData() != null) {
+                    ownerName = res.getData().getFullName();
+                    ownerEmail = res.getData().getEmail();
+                }
+            } catch (Exception e) {
+                log.warn("Sahib məlumatı alına bilmədi (ownerId={}): {}", r.getOwnerId(), e.getMessage());
+            }
+
+            String planName = null;
+            try {
+                var res = subscriptionClient.getCurrentSubscription(r.getId());
+                if (res != null && res.getData() != null) {
+                    planName = res.getData().getPlanName();
+                }
+            } catch (Exception e) {
+                log.warn("Paket məlumatı alına bilmədi (restaurantId={}): {}", r.getId(), e.getMessage());
+            }
+
+            return AdminRestaurantDto.builder()
+                    .id(r.getId())
+                    .name(r.getName())
+                    .ownerName(ownerName)
+                    .ownerEmail(ownerEmail)
+                    .planName(planName)
+                    .branchCount((int) branchRepository.countByRestaurant(r))
+                    .status(r.getStatus() != null ? r.getStatus() : RestaurantStatus.ACTIVE)
+                    .build();
+        }).toList();
+    }
+
+    public void updateRestaurantStatus(UUID id, RestaurantStatus status) {
+        var restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Restoran tapılmadı!"));
+        restaurant.setStatus(status);
+        restaurantRepository.save(restaurant);
+    }
+
+    public long countRestaurants() {
+        return restaurantRepository.count();
+    }
 
 }

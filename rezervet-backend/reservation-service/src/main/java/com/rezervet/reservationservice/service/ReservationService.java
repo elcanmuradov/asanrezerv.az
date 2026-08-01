@@ -20,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -83,6 +84,11 @@ public class ReservationService {
         reservation = reservationRepository.save(reservation);
 
         return toReservationDto(reservation);
+    }
+
+    public long countThisMonth() {
+        YearMonth ym = YearMonth.now();
+        return reservationRepository.countByDateBetween(ym.atDay(1), ym.atEndOfMonth());
     }
 
     public ReservationDto updateStatus(UUID id, ReservationStatus status) {

@@ -1,4 +1,4 @@
-name: asanrezerv
+name: rezervet
 
 services:
   # ---------------- İnfrastruktur ----------------
@@ -6,15 +6,15 @@ services:
     image: postgres:17-alpine
     container_name: asanrezerv-postgres
     environment:
-      POSTGRES_DB: asanrezerv
-      POSTGRES_USER: asanrezerv
-      POSTGRES_PASSWORD: asanrezerv
+      POSTGRES_DB: rezervet
+      POSTGRES_USER: rezervet
+      POSTGRES_PASSWORD: rezervet
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U asanrezerv -d asanrezerv"]
+      test: ["CMD-SHELL", "pg_isready -U rezervet -d rezervet"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -135,9 +135,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
-      SPRING_DATASOURCE_USERNAME: asanrezerv
-      SPRING_DATASOURCE_PASSWORD: asanrezerv
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
+      SPRING_DATASOURCE_USERNAME: rezervet
+      SPRING_DATASOURCE_PASSWORD: rezervet
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
@@ -160,9 +160,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
-      SPRING_DATASOURCE_USERNAME: asanrezerv
-      SPRING_DATASOURCE_PASSWORD: asanrezerv
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
+      SPRING_DATASOURCE_USERNAME: rezervet
+      SPRING_DATASOURCE_PASSWORD: rezervet
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       # Redis (limit cache) + Kafka (limit event-ləri)
       SPRING_DATA_REDIS_HOST: redis
@@ -181,9 +181,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
-      SPRING_DATASOURCE_USERNAME: asanrezerv
-      SPRING_DATASOURCE_PASSWORD: asanrezerv
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
+      SPRING_DATASOURCE_USERNAME: rezervet
+      SPRING_DATASOURCE_PASSWORD: rezervet
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     restart: unless-stopped
     networks:
@@ -200,9 +200,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
-      SPRING_DATASOURCE_USERNAME: asanrezerv
-      SPRING_DATASOURCE_PASSWORD: asanrezerv
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
+      SPRING_DATASOURCE_USERNAME: rezervet
+      SPRING_DATASOURCE_PASSWORD: rezervet
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     networks:
       - asanrezerv-net
@@ -219,9 +219,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asanrezerv
-      SPRING_DATASOURCE_USERNAME: asanrezerv
-      SPRING_DATASOURCE_PASSWORD: asanrezerv
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rezervet
+      SPRING_DATASOURCE_USERNAME: rezervet
+      SPRING_DATASOURCE_PASSWORD: rezervet
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379

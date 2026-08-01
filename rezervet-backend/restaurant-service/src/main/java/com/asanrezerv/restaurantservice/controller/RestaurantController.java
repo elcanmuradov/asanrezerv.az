@@ -34,6 +34,12 @@ public class RestaurantController {
                 restaurantService.getRestaurants(search, city, page, size)));
     }
 
+    // Platforma-geniş statistika üçün (admin/subscription-service) — Docker daxili şəbəkədən çağırılır.
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Long>> countRestaurants() {
+        return ResponseEntity.ok(ApiResponse.success(restaurantService.countRestaurants()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RestaurantDto>> getRestaurantById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(restaurantService.getRestaurantById(id)));

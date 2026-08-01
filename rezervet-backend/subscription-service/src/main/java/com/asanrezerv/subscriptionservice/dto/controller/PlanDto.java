@@ -29,7 +29,7 @@ public class PlanDto {
 
     private Integer visibilityLevel;
 
-    private Integer aiAnalyticLevel;
+    private Integer aiAnalysisLevel;
 
     private BigDecimal monthlyPrice;
 }

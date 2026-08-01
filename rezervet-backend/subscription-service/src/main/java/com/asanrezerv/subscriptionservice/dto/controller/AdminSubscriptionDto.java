@@ -4,23 +4,19 @@ import com.asanrezerv.subscriptionservice.enums.SubscriptionStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+// Admin > Abunələr siyahısı üçün (restaurantName/planName zənginləşdirilib)
 @Data
 @Builder
-public class SubscriptionDto {
+public class AdminSubscriptionDto {
     private UUID id;
-
-    private UUID restaurantId;
-
-    private UUID planId;
-
+    private String restaurantName;
     private String planName;
-
-    private LocalDate startDate;
-
-    private LocalDate endDate;
-
+    private LocalDate startedAt;
+    private LocalDate currentPeriodEnd;
+    private BigDecimal monthlyPrice;
     private SubscriptionStatus status;
 }

@@ -21,7 +21,7 @@ const emptyForm = {
   aiAnalysisLevel: 0,
   description: '',
   features: [],
-  popular: false,
+  mostPopular: false,
 };
 
 // Admin: paket (Starter/Standart/Premium) redaktəsi
@@ -64,7 +64,7 @@ export default function AdminPlans() {
       aiAnalysisLevel: plan.aiAnalysisLevel ?? 0,
       description: plan.description ?? '',
       features: Array.isArray(plan.features) ? plan.features : [],
-      popular: !!plan.popular,
+      mostPopular: !!plan.mostPopular,
     });
     setFormError(null);
     setModalOpen(true);
@@ -144,10 +144,10 @@ export default function AdminPlans() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-surface-container-lowest p-lg rounded-xl flex flex-col relative ${plan.popular ? 'border-2 border-primary shadow-xl' : 'border border-outline-variant'
+              className={`bg-surface-container-lowest p-lg rounded-xl flex flex-col relative ${plan.mostPopular ? 'border-2 border-primary shadow-xl' : 'border border-outline-variant'
                 }`}
             >
-              {plan.popular && (
+              {plan.mostPopular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-4 py-1 rounded-full font-sans text-caption uppercase tracking-wider">
                   Ən populyar
                 </div>
@@ -311,7 +311,7 @@ export default function AdminPlans() {
               </div>
 
               <label className="flex items-center gap-sm p-sm bg-surface-container rounded-lg cursor-pointer">
-                <input type="checkbox" checked={form.popular} onChange={(e) => setForm({ ...form, popular: e.target.checked })} className="rounded text-primary focus:ring-primary" />
+                <input type="checkbox" checked={form.mostPopular} onChange={(e) => setForm({ ...form, mostPopular: e.target.checked })} className="rounded text-primary focus:ring-primary" />
                 <span className="font-sans text-body-md">"Ən populyar" kimi işarələ</span>
               </label>
 

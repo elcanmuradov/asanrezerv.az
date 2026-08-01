@@ -26,6 +26,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     List<Reservation> findReservationsByRestaurantId(UUID branchId);
 
     List<Reservation> findReservationsByBranchId(UUID branchId);
+
+    long countByDateBetween(LocalDate from, LocalDate to);
 }
 /*
     12:00 - 14:00 id 1

@@ -63,7 +63,9 @@ public class RouteConfig {
 
                 .route("subscription-service", r -> r
                         .path("/api/subscriptions/**",
-                                "/api/admin/plans/**")
+                                "/api/admin/plans/**",
+                                "/api/admin/subscriptions/**",
+                                "/api/admin/stats/**")
                         .uri(subscriptionUri))
 
                 .route("ai-analysis-service", r -> r

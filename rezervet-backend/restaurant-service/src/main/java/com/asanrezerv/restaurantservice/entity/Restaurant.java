@@ -1,6 +1,7 @@
 package com.asanrezerv.restaurantservice.entity;
 
 import com.asanrezerv.restaurantservice.enums.PublicationStatus;
+import com.asanrezerv.restaurantservice.enums.RestaurantStatus;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,10 @@ public class Restaurant {
     private String phone;
 
     private PublicationStatus publicationStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private RestaurantStatus status = RestaurantStatus.ACTIVE;
 
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RestaurantImage> mediaList = new ArrayList<>();

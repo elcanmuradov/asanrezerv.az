@@ -25,5 +25,7 @@ public class PlanRequest {
 
     private Integer visibilityLevel;
 
+    private Integer aiAnalysisLevel;
+
     private BigDecimal monthlyPrice;
 }

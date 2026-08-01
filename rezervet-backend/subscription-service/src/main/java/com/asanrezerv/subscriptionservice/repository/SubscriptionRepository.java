@@ -14,4 +14,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     Optional<Subscription> findSubscriptionByRestaurantIdAndStatus(UUID restaurantId, SubscriptionStatus status);
 
     List<Subscription> findSubscriptionsByStatusAndEndDateBefore(SubscriptionStatus status, LocalDate endDateBefore);
+
+    long countByStatus(SubscriptionStatus status);
 }
