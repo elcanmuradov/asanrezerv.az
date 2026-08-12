@@ -1,58 +1,117 @@
-<<<<<<< HEAD
-# Rezervet.az
+# Rezervet.az (asanrezerv.az)
 
-Restoranlar üçün onlayn rezervasiya platforması — mikroservis backend (Spring Boot) + React frontend.
+Restoranlar üçün onlayn rezervasiya və idarəetmə platforması. Bu layihə mikroservis memarlığına əsaslanan **Spring Boot** backend servisləri və modern **React** frontend tətbiqindən ibarətdir.
 
-## Sürətli başlanğıc (Docker)
+---
+
+## 🚀 Sürətli Başlanğıc (Docker ilə)
+
+Bütün infrastrukturu və mikroservisləri Docker Compose vasitəsilə tək bir komanda ilə ayağa qaldıra bilərsiniz:
 
 ```bash
-cp .env.example .env      # dəyərləri yoxla/dəyiş
+# 1. Ətraf mühit dəyişənlərini nüsxələyin və ehtiyac olduqda dəyişdirin
+cp .env.example .env
+
+# 2. Bütün servisləri tikib işə salın
 docker compose up --build
 ```
 
-Sonra:
-- **Frontend:** http://localhost:5173
-- **API Gateway:** http://localhost:8080 (birbaşa API testi üçün, məs. Postman)
+### Giriş Nöqtələri:
+* **Müştəri Paneli & Veb Sayt (Frontend):** [http://localhost:5173](http://localhost:5173)
+* **API Gateway (Arxa keçid):** [http://localhost:8080](http://localhost:8080) (Postman və ya digər client-lər üçün)
+* **Grafana (Monitorinq):** [http://localhost:3000](http://localhost:3000) (İstifadəçi: `admin`, Şifrə: `.env` daxilindəki dəyər və ya `admin`)
+* **Kibana (Elastisearch axtarış paneli):** [http://localhost:5601](http://localhost:5601)
 
-Frontend nginx `/api/*` sorğularını daxili şəbəkədən api-gateway-ə proxy edir — brauzer üçün hər şey eyni origin-dədir, CORS lazım deyil.
+> [!NOTE]
+> Frontend layihəsi Nginx vasitəsilə `/api/*` sorğularını daxili şəbəkədə birbaşa `api-gateway`-ə yönləndirir. Bu səbəbdən brauzer eyni origin-dən çıxış edir və əlavə CORS sazlamalarına ehtiyac qalmır.
 
-## Arxitektura
+---
 
+## 🏗️ Sistem Arxitekturası
+
+Sistem təhlükəsizlik və performans üçün yalnız **API Gateway** və **Frontend** servislərini kənara açır. Digər daxili servislər yalnız daxili Docker şəbəkəsində (`asanrezerv-net`) bir-biri ilə əlaqə saxlayır.
+
+```mermaid
+graph TD
+    Client[Brauzer / Mobil Client] -->|Port 5173| Frontend[Frontend Nginx]
+    Frontend -->|/api/*| Gateway[API Gateway :8080]
+    Client -->|Birbaşa Sorğu| Gateway
+    
+    subgraph Daxili Şəbəkə (asanrezerv-net)
+        Gateway --> Auth[auth-service]
+        Gateway --> Rest[restaurant-service]
+        Gateway --> Staff[staff-service]
+        Gateway --> Sub[subscription-service]
+        Gateway --> Res[reservation-service]
+        Gateway --> AI[ai-analysis-service]
+        Gateway --> Search[search-service]
+        Gateway --> Media[media-service]
+        
+        %% Məlumat anbarları və köməkçi servislər
+        Auth --> Postgres[(PostgreSQL)]
+        Auth --> Redis[(Redis Cache/OTP)]
+        
+        Rest --> Postgres
+        Rest --> Redis
+        Rest --> Kafka{Apache Kafka}
+        
+        Res --> Postgres
+        Res --> Redis
+        
+        Search --> ES[(Elasticsearch)]
+        Search --> Kafka
+        
+        Sub --> Postgres
+    end
 ```
-  Brauzer
-    │
-    ▼
-  frontend (nginx :5173)  ──/api──►  api-gateway (:8080)
-                                        │  JWT imzasını yoxlayır,
-                                        │  X-User-Id / X-User-Role header əlavə edir
-                    ┌───────────────────┼───────────────────┐
-                    ▼                   ▼                   ▼
-              auth-service       restaurant-service    (reservation, subscription... - gələcək)
-                    │                   │
-                 Postgres (auth_db)  Postgres (restaurant_db)
-                    │
-                  Redis (OTP, tempToken, refresh token, blacklist)
-```
 
-**Təhlükəsizlik modeli:** yalnız `api-gateway` və `frontend` host-a açılır. `auth-service` və `restaurant-service` yalnız daxili Docker şəbəkəsindən əlçatandır — kənardan saxta `X-User-Id` header ilə birbaşa vurmaq mümkün deyil. Gateway gələn `X-User-*` header-lərini həmişə təmizləyir və yalnız imzalanmış JWT-dən çıxardığını qoyur.
+**Təhlükəsizlik Modeli:** Kənardan gələn sorğularda saxta `X-User-Id` və ya `X-User-Role` başlıqlarının (headers) göndərilməsinin qarşısı Gateway tərəfindən alınır. Gateway daxil olan JWT tokenini yoxlayır, şifrəsini açır və yalnız etibarlı istifadəçi məlumatlarını daxili servislərə ötürür.
 
-## Servislər və portlar (Docker daxili)
+---
 
-| Servis | Daxili port | Host-a açıq? |
-|---|---|---|
-| frontend (nginx) | 80 | ✅ 5173 |
-| api-gateway | 8080 | ✅ 8080 |
-| auth-service | 8080 | ❌ yalnız daxili |
-| restaurant-service | 8080 | ❌ yalnız daxili |
-| postgres | 5432 | ⚠️ 5432 (yalnız debug) |
-| redis | 6379 | ⚠️ 6379 (yalnız debug) |
+## 🛠️ Texnologiya Steki
 
-## ⚠️ Bilinməli məqamlar
+### Backend (Mikroservislər)
+* **Java 21 / 25 / 26** & **Spring Boot 3.x / 4.x**
+* **Spring Cloud Gateway** — Mərkəzi marşrutlaşdırma və JWT validasiyası.
+* **Spring Data JPA** & **PostgreSQL 17** — Əsas relyasiyalı məlumat bazası.
+* **Redis 7** — Müvəqqəti tokenlər, OTP kodları, keşləmə və masaların dublikat rezervasiyasını önləmək üçün **Distributed Lock (Redisson)**.
+* **Apache Kafka 3.8** — Servislərarası asinxron, hadisəyə əsaslanan (event-driven) kommunikasiya.
+* **Elasticsearch 9 & Kibana** — Sürətli restoran axtarışı və filtrləmə.
+* **Grafana & Prometheus** — Sistem göstəricilərinin vizuallaşdırılması və monitorinqi.
 
-- **Spring Cloud versiyası:** `api-gateway/build.gradle`-də `springCloudVersion = 2025.1.0` təxminidir. Spring Boot 4.1 çox yenidir; uyğun gəlməzsə [start.spring.io](https://start.spring.io)-da "Gateway" seçib düzgün BOM versiyasını və starter adını götür (reactive gateway starter bəzi versiyalarda `spring-cloud-starter-gateway-server-webflux` adlanır).
-- **Java 26 image:** Dockerfile-lar `eclipse-temurin:26-jdk` istifadə edir. Əgər bu tag hələ mövcud deyilsə `25-jdk`-ya endir (build.gradle toolchain-i də).
-- `.env` faylındakı `JWT_SECRET` **auth-service və api-gateway-də eyni** olmalıdır (compose bunu avtomatik hər ikisinə ötürür).
-```
-=======
-# asanrezerv.az
->>>>>>> d2150f53709421dbe96d03c16714399f9cfc9927
+### Frontend
+* **React** (Vite ilə sürətli yığım)
+* **Tailwind CSS** — Modern UI və dizayn sistemi
+* **React Context API** — Qlobal sessiya və rol idarəetməsi
+
+---
+
+## 📂 Servislər və Şəbəkə Portları
+
+| Servis | Daxili Port | Xarici Port (Host) | Açıqlama |
+| :--- | :---: | :---: | :--- |
+| **frontend** | 80 | `5173` | Veb UI və Nginx Proxy |
+| **api-gateway** | 8080 | `8080` | Mərkəzi Giriş Nöqtəsi (Gateway) |
+| **auth-service** | 8080 | *Yalnız daxili* | İstifadəçi Qeydiyyatı, Giriş və OTP |
+| **restaurant-service** | 8080 | *Yalnız daxili* | Restoran və Filial idarəetməsi |
+| **staff-service** | 8080 | *Yalnız daxili* | İşçi heyəti idarəetməsi |
+| **subscription-service**| 8080 | *Yalnız daxili* | SaaS abunəlik və limit yoxlanışı |
+| **reservation-service** | 8080 | *Yalnız daxili* | Masaların rezervasiya sistemi (Redis Lock ilə) |
+| **ai-analysis-service** | 8080 | *Yalnız daxili* | AI əsaslı analitika və hesabatlılıq |
+| **search-service** | 8080 | *Yalnız daxili* | Restoran axtarışı (Elasticsearch ilə) |
+| **media-service** | 8080 | *Yalnız daxili* | Şəkil və fayl yükləmə xidməti |
+| **postgres** | 5432 | `5432` *(Yalnız debug)* | Mərkəzi PostgreSQL bazası |
+| **redis** | 6379 | `6379` *(Yalnız debug)* | Keş və Paylaşılan Kilidlər |
+| **kafka** | 9092 | `29092` *(Yalnız debug)*| Event Broker |
+| **elasticsearch** | 9200 | `9200` *(Yalnız debug)*| Axtarış Mühərriki |
+| **grafana** | 3000 | `3000` | Monitorinq paneli |
+
+---
+
+## 📝 Önəmli Qeydlər və İpucuları
+
+* **JWT Təhlükəsizliyi:** `.env` faylındakı `JWT_SECRET` dəyişəni həm `auth-service`, həm də `api-gateway` üçün eyni olmalıdır (Docker compose bunu avtomatik idarə edir).
+* **Double-Booking Profilaktikası:** Rezervasiya zamanı eyni masanın eyni vaxtda iki şəxs tərəfindən rezerv edilməməsi üçün `reservation-service` Redis üzərində qurulmuş paylanmış kilidlərdən (Redisson Distributed Lock) istifadə edir.
+* **Feature Gating (Limitlər):** Restoranın yeni filial və ya masa əlavə edib-edə bilməyəcəyi `subscription-service` tərəfindən müəyyən edilmiş limitlər çərçivəsində yoxlanılır.
+
