@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Rezervet.az (asanrezerv.az)
 
 Restoranlar üçün onlayn rezervasiya və idarəetmə platforması. Bu layihə mikroservis memarlığına əsaslanan **Spring Boot** backend servisləri və modern **React** frontend tətbiqindən ibarətdir.
@@ -115,7 +114,3 @@ graph TD
 * **JWT Təhlükəsizliyi:** `.env` faylındakı `JWT_SECRET` dəyişəni həm `auth-service`, həm də `api-gateway` üçün eyni olmalıdır (Docker compose bunu avtomatik idarə edir).
 * **Double-Booking Profilaktikası:** Rezervasiya zamanı eyni masanın eyni vaxtda iki şəxs tərəfindən rezerv edilməməsi üçün `reservation-service` Redis üzərində qurulmuş paylanmış kilidlərdən (Redisson Distributed Lock) istifadə edir.
 * **Feature Gating (Limitlər):** Restoranın yeni filial və ya masa əlavə edib-edə bilməyəcəyi `subscription-service` tərəfindən müəyyən edilmiş limitlər çərçivəsində yoxlanılır.
-
-=======
-
->>>>>>> 3426796aba8612314cd9af6da6a0987a3b5fffe1
