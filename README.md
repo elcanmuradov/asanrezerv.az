@@ -100,45 +100,6 @@ Infrastructure:
 
 ---
 
-## Başlamaq
-
-### Tələblər
-
-- **Java 26** (JDK)
-- **Docker & Docker Compose**
-- **PostgreSQL**
-- **Redis**
-- **Apache Kafka**
-- **Elasticsearch**
-
-### Lokal Qaydada İşlətmək
-
-```bash
-# Hər servisi ayrı-ayrılıqda başlatmaq
-cd auth-service
-./gradlew bootRun
-```
-
-### Gradle ilə Build
-
-```bash
-cd <servis-adı>
-./gradlew build
-
-# Test olmadan
-./gradlew build -x test
-```
-
-### Docker Image Yaratmaq
-
-Hər servis öz `Dockerfile`-na malikdir:
-
-```bash
-cd auth-service
-docker build -t asanrezerv/auth-service:latest .
-```
-
----
 
 ## Environment Dəyişənləri
 
@@ -190,39 +151,8 @@ Bütün sorğular `http://localhost:8080` (API Gateway) üzərindən keçir.
 ```
 asan-backend/
 ├── api-gateway/                  # Spring Cloud Gateway (WebFlux)
-│   ├── src/main/java/
-│   │   └── com/asanrezerv/apigateway/
-│   │       ├── config/           # Gateway routing & security config
-│   │       └── filter/           # JWT auth filter
-│   └── src/main/resources/
-│       └── application.yaml
-│
 ├── auth-service/                 # Autentifikasiya servisi
-│   └── src/main/java/
-│       └── com/asanrezerv/authservice/
-│           ├── controller/       # AuthController, InternalController
-│           ├── service/          # Biznes məntiqi
-│           ├── entity/           # JPA entity-lər
-│           ├── repository/       # Spring Data JPA
-│           ├── dto/              # Request/Response DTO-lar
-│           ├── mapper/           # MapStruct mapper-lər
-│           ├── security/         # JWT, OAuth2 konfiqurasiyası
-│           ├── config/           # Spring konfiqurasiyaları
-│           └── exception/        # Xəta idarəetməsi
-│
 ├── restaurant-service/           # Restoran idarəetmə servisi
-│   └── src/main/java/
-│       └── com/asanrezerv/restaurantservice/
-│           ├── controller/
-│           ├── service/
-│           ├── entity/
-│           ├── repository/
-│           ├── dto/
-│           ├── enums/
-│           ├── mapper/
-│           ├── client/           # OpenFeign client-lər
-│           └── util/
-│
 ├── reservation-service/          # Rezervasiya servisi
 ├── staff-service/                # İşçi idarəetmə servisi (OkHttp + Feign PATCH)
 ├── subscription-service/         # Abunəlik servisi
