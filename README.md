@@ -1,116 +1,248 @@
-# Rezervet.az (asanrezerv.az)
+# AsanRezerv.az — Backend Microservices
 
-Restoranlar üçün onlayn rezervasiya və idarəetmə platforması. Bu layihə mikroservis memarlığına əsaslanan **Spring Boot** backend servisləri və modern **React** frontend tətbiqindən ibarətdir.
+> **AsanRezerv.az** — Azərbaycanlı restoran rezervasiya platforması üçün hazırlanmış müasir, scalable mikroservis arxitekturası.
 
 ---
 
-## 🚀 Sürətli Başlanğıc (Docker ilə)
+## 📋 Mündəricat
 
-Bütün infrastrukturu və mikroservisləri Docker Compose vasitəsilə tək bir komanda ilə ayağa qaldıra bilərsiniz:
+- [Layihə haqqında](#layihə-haqqında)
+- [Arxitektura](#arxitektura)
+- [Servisler](#servisler)
+- [Texnoloji Stack](#texnoloji-stack)
+- [Başlamaq](#başlamaq)
+- [Environment Dəyişənləri](#environment-dəyişənləri)
+- [API Endpointlər](#api-endpointlər)
+- [Layihə Strukturu](#layihə-strukturu)
+
+---
+
+## Layihə haqqında
+
+AsanRezerv.az backend hissəsi tamamilə mikroservis arxitekturasına əsaslanır. Hər servis öz məsuliyyət sahəsini örtür, müstəqil deploy oluna bilər və Docker vasitəsilə idarə edilir. Bütün xarici sorğular **API Gateway** üzərindən keçir.
+
+---
+
+## Arxitektura
+
+```
+                        ┌─────────────────┐
+                        │   API Gateway   │  :8080
+                        │  (WebFlux + JWT)│
+                        └────────┬────────┘
+                                 │
+          ┌──────────────────────┼───────────────────────┐
+          │          │           │           │            │
+   ┌──────▼──┐ ┌─────▼───┐ ┌────▼────┐ ┌───▼──────┐ ┌──▼────────┐
+   │  Auth   │ │Restaurant│ │Reservat.│ │Subscript.│ │  Staff    │
+   │ Service │ │ Service  │ │ Service │ │  Service │ │  Service  │
+   └─────────┘ └─────────┘ └─────────┘ └──────────┘ └───────────┘
+          │          │                       │
+   ┌──────▼──┐ ┌─────▼───┐            ┌─────▼──────┐
+   │  Search │ │  Media  │            │Notification│
+   │ Service │ │ Service │            │  Service   │
+   └─────────┘ └─────────┘            └────────────┘
+                                       ┌────────────┐
+                                       │ AI Analysis│
+                                       │  Service   │
+                                       └────────────┘
+
+Infrastructure:
+  PostgreSQL · Redis · Apache Kafka · Elasticsearch
+```
+
+---
+
+## Servisler
+
+| Servis | Təsvir |
+|--------|--------|
+| **api-gateway** | Bütün sorğuları yönləndirən şlüz; JWT yoxlaması, routing |
+| **auth-service** | Qeydiyyat (OTP), login, logout, token refresh, Google OAuth2 |
+| **restaurant-service** | Restoran, masa, menyu idarəetməsi |
+| **reservation-service** | Rezervasiya yaratma, ləğv etmə, tarixçə |
+| **staff-service** | Restoran işçiləri, masa statusu idarəetməsi |
+| **subscription-service** | Premium abunəlik planları, ödəniş statusu |
+| **search-service** | Elasticsearch əsaslı restoran axtarışı |
+| **media-service** | Cloudinary üzərindən şəkil/media yükləmə |
+| **notification-service** | E-poçt bildirişləri (Spring Mail) |
+| **ai-analysis-service** | Stateless analitika servisi (OpenFeign + Redis cache) |
+
+---
+
+## Texnoloji Stack
+
+### Core
+
+| Texnologiya | Versiya |
+|-------------|---------|
+| Java | 26 |
+| Spring Boot | 4.1.0 |
+| Spring Cloud | 2025.1.x |
+| Gradle | 8.x |
+
+### Per-Servis Texnologiyalar
+
+| Texnologiya | Hansı servislərdə istifadə olunur |
+|-------------|----------------------------------|
+| Spring Cloud Gateway (WebFlux) | api-gateway |
+| Spring Security + JWT (JJWT 0.13) | api-gateway, auth-service |
+| Spring Security OAuth2 Client (Google) | auth-service |
+| Spring Data JPA + PostgreSQL | auth-service, restaurant-service, reservation-service, staff-service, subscription-service |
+| Spring Data Redis | auth-service, restaurant-service, reservation-service, search-service, subscription-service, ai-analysis-service |
+| Apache Kafka | auth-service, restaurant-service, search-service, subscription-service |
+| Elasticsearch | search-service |
+| Spring OpenFeign | restaurant-service, reservation-service, staff-service, subscription-service, ai-analysis-service |
+| Cloudinary SDK | media-service |
+| Spring Mail | notification-service |
+| MapStruct | auth-service |
+| Lombok | Bütün servisler |
+
+---
+
+## Başlamaq
+
+### Tələblər
+
+- **Java 26** (JDK)
+- **Docker & Docker Compose**
+- **PostgreSQL**
+- **Redis**
+- **Apache Kafka**
+- **Elasticsearch**
+
+### Lokal Qaydada İşlətmək
 
 ```bash
-# 1. Ətraf mühit dəyişənlərini nüsxələyin və ehtiyac olduqda dəyişdirin
-cp .env.example .env
-
-# 2. Bütün servisləri tikib işə salın
-docker compose up --build
+# Hər servisi ayrı-ayrılıqda başlatmaq
+cd auth-service
+./gradlew bootRun
 ```
 
-### Giriş Nöqtələri:
-* **Müştəri Paneli & Veb Sayt (Frontend):** [http://localhost:5173](http://localhost:5173)
-* **API Gateway (Arxa keçid):** [http://localhost:8080](http://localhost:8080) (Postman və ya digər client-lər üçün)
-* **Grafana (Monitorinq):** [http://localhost:3000](http://localhost:3000) (İstifadəçi: `admin`, Şifrə: `.env` daxilindəki dəyər və ya `admin`)
-* **Kibana (Elastisearch axtarış paneli):** [http://localhost:5601](http://localhost:5601)
+### Gradle ilə Build
 
-> [!NOTE]
-> Frontend layihəsi Nginx vasitəsilə `/api/*` sorğularını daxili şəbəkədə birbaşa `api-gateway`-ə yönləndirir. Bu səbəbdən brauzer eyni origin-dən çıxış edir və əlavə CORS sazlamalarına ehtiyac qalmır.
+```bash
+cd <servis-adı>
+./gradlew build
 
----
-
-## 🏗️ Sistem Arxitekturası
-
-Sistem təhlükəsizlik və performans üçün yalnız **API Gateway** və **Frontend** servislərini kənara açır. Digər daxili servislər yalnız daxili Docker şəbəkəsində (`asanrezerv-net`) bir-biri ilə əlaqə saxlayır.
-
-```mermaid
-graph TD
-    Client[Brauzer / Mobil Client] -->|Port 5173| Frontend[Frontend Nginx]
-    Frontend -->|/api/*| Gateway[API Gateway :8080]
-    Client -->|Birbaşa Sorğu| Gateway
-    
-    subgraph Daxili Şəbəkə (asanrezerv-net)
-        Gateway --> Auth[auth-service]
-        Gateway --> Rest[restaurant-service]
-        Gateway --> Staff[staff-service]
-        Gateway --> Sub[subscription-service]
-        Gateway --> Res[reservation-service]
-        Gateway --> AI[ai-analysis-service]
-        Gateway --> Search[search-service]
-        Gateway --> Media[media-service]
-        
-        %% Məlumat anbarları və köməkçi servislər
-        Auth --> Postgres[(PostgreSQL)]
-        Auth --> Redis[(Redis Cache/OTP)]
-        
-        Rest --> Postgres
-        Rest --> Redis
-        Rest --> Kafka{Apache Kafka}
-        
-        Res --> Postgres
-        Res --> Redis
-        
-        Search --> ES[(Elasticsearch)]
-        Search --> Kafka
-        
-        Sub --> Postgres
-    end
+# Test olmadan
+./gradlew build -x test
 ```
 
-**Təhlükəsizlik Modeli:** Kənardan gələn sorğularda saxta `X-User-Id` və ya `X-User-Role` başlıqlarının (headers) göndərilməsinin qarşısı Gateway tərəfindən alınır. Gateway daxil olan JWT tokenini yoxlayır, şifrəsini açır və yalnız etibarlı istifadəçi məlumatlarını daxili servislərə ötürür.
+### Docker Image Yaratmaq
+
+Hər servis öz `Dockerfile`-na malikdir:
+
+```bash
+cd auth-service
+docker build -t asanrezerv/auth-service:latest .
+```
 
 ---
 
-## 🛠️ Texnologiya Steki
+## Environment Dəyişənləri
 
-### Backend (Mikroservislər)
-* **Java 21 / 25 / 26** & **Spring Boot 3.x / 4.x**
-* **Spring Cloud Gateway** — Mərkəzi marşrutlaşdırma və JWT validasiyası.
-* **Spring Data JPA** & **PostgreSQL 17** — Əsas relyasiyalı məlumat bazası.
-* **Redis 7** — Müvəqqəti tokenlər, OTP kodları, keşləmə və masaların dublikat rezervasiyasını önləmək üçün **Distributed Lock (Redisson)**.
-* **Apache Kafka 3.8** — Servislərarası asinxron, hadisəyə əsaslanan (event-driven) kommunikasiya.
-* **Elasticsearch 9 & Kibana** — Sürətli restoran axtarışı və filtrləmə.
-* **Grafana & Prometheus** — Sistem göstəricilərinin vizuallaşdırılması və monitorinqi.
+### API Gateway
 
-### Frontend
-* **React** (Vite ilə sürətli yığım)
-* **Tailwind CSS** — Modern UI və dizayn sistemi
-* **React Context API** — Qlobal sessiya və rol idarəetməsi
+| Dəyişən | Default | Təsvir |
+|---------|---------|--------|
+| `SPRING_SECURITY_SECRET_KEY` | *(uzun hex string)* | JWT imzalama açarı |
+| `SERVICES_AUTH_URI` | `http://auth-service:8080` | Auth servisin URL-i |
+| `SERVICES_RESTAURANT_URI` | `http://restaurant-service:8080` | Restaurant servisin URL-i |
+| `SERVICES_RESERVATION_URI` | `http://reservation-service:8080` | Reservation servisin URL-i |
+| `SERVICES_SUBSCRIPTION_URI` | `http://subscription-service:8080` | Subscription servisin URL-i |
+| `SERVICES_STAFF_URI` | `http://staff-service:8080` | Staff servisin URL-i |
+| `SERVICES_AI_URI` | `http://ai-analysis-service:8080` | AI Analysis servisin URL-i |
+| `SERVICES_SEARCH_URI` | `http://search-service:8080` | Search servisin URL-i |
 
----
+### Auth Service
 
-## 📂 Servislər və Şəbəkə Portları
+| Dəyişən | Default | Təsvir |
+|---------|---------|--------|
+| `SPRING_SECURITY_SECRET_KEY` | *(uzun hex string)* | JWT imzalama açarı (Gateway ilə eyni olmalıdır) |
+| `SPRING_DATA_REDIS_HOST` | `localhost` | Redis host |
+| `SPRING_DATA_REDIS_PORT` | `6379` | Redis port |
 
-| Servis | Daxili Port | Xarici Port (Host) | Açıqlama |
-| :--- | :---: | :---: | :--- |
-| **frontend** | 80 | `5173` | Veb UI və Nginx Proxy |
-| **api-gateway** | 8080 | `8080` | Mərkəzi Giriş Nöqtəsi (Gateway) |
-| **auth-service** | 8080 | *Yalnız daxili* | İstifadəçi Qeydiyyatı, Giriş və OTP |
-| **restaurant-service** | 8080 | *Yalnız daxili* | Restoran və Filial idarəetməsi |
-| **staff-service** | 8080 | *Yalnız daxili* | İşçi heyəti idarəetməsi |
-| **subscription-service**| 8080 | *Yalnız daxili* | SaaS abunəlik və limit yoxlanışı |
-| **reservation-service** | 8080 | *Yalnız daxili* | Masaların rezervasiya sistemi (Redis Lock ilə) |
-| **ai-analysis-service** | 8080 | *Yalnız daxili* | AI əsaslı analitika və hesabatlılıq |
-| **search-service** | 8080 | *Yalnız daxili* | Restoran axtarışı (Elasticsearch ilə) |
-| **media-service** | 8080 | *Yalnız daxili* | Şəkil və fayl yükləmə xidməti |
-| **postgres** | 5432 | `5432` *(Yalnız debug)* | Mərkəzi PostgreSQL bazası |
-| **redis** | 6379 | `6379` *(Yalnız debug)* | Keş və Paylaşılan Kilidlər |
-| **kafka** | 9092 | `29092` *(Yalnız debug)*| Event Broker |
-| **elasticsearch** | 9200 | `9200` *(Yalnız debug)*| Axtarış Mühərriki |
-| **grafana** | 3000 | `3000` | Monitorinq paneli |
+> ⚠️ **Diqqət:** JWT `secret-key` hər iki servisdə mütləq eyni olmalıdır. Production-da bu dəyər environment dəyişəni kimi verilməlidir.
 
 ---
 
-## 📝 Önəmli Qeydlər və İpucuları
+## API Endpointlər
 
-* **JWT Təhlükəsizliyi:** `.env` faylındakı `JWT_SECRET` dəyişəni həm `auth-service`, həm də `api-gateway` üçün eyni olmalıdır (Docker compose bunu avtomatik idarə edir).
-* **Double-Booking Profilaktikası:** Rezervasiya zamanı eyni masanın eyni vaxtda iki şəxs tərəfindən rezerv edilməməsi üçün `reservation-service` Redis üzərində qurulmuş paylanmış kilidlərdən (Redisson Distributed Lock) istifadə edir.
-* **Feature Gating (Limitlər):** Restoranın yeni filial və ya masa əlavə edib-edə bilməyəcəyi `subscription-service` tərəfindən müəyyən edilmiş limitlər çərçivəsində yoxlanılır.
+Bütün sorğular `http://localhost:8080` (API Gateway) üzərindən keçir.
+
+### Auth `/api/auth`
+
+| Method | Endpoint | Auth | Təsvir |
+|--------|----------|------|--------|
+| `POST` | `/api/auth/register/initiate` | Yox | OTP kodu göndər (e-poçt) |
+| `POST` | `/api/auth/register/verify` | Yox | OTP kodunu yoxla |
+| `POST` | `/api/auth/register/finish` | Yox | Qeydiyyatı tamamla |
+| `POST` | `/api/auth/login` | Yox | Giriş et, JWT al |
+| `POST` | `/api/auth/logout` | ✅ Bearer | Çıxış et |
+| `POST` | `/api/auth/refresh` | Yox | Refresh token ilə yeni JWT al |
+| `GET`  | `/api/auth/me` | ✅ Bearer | Cari istifadəçi məlumatları |
+
+---
+
+## Layihə Strukturu
+
+```
+asan-backend/
+├── api-gateway/                  # Spring Cloud Gateway (WebFlux)
+│   ├── src/main/java/
+│   │   └── com/asanrezerv/apigateway/
+│   │       ├── config/           # Gateway routing & security config
+│   │       └── filter/           # JWT auth filter
+│   └── src/main/resources/
+│       └── application.yaml
+│
+├── auth-service/                 # Autentifikasiya servisi
+│   └── src/main/java/
+│       └── com/asanrezerv/authservice/
+│           ├── controller/       # AuthController, InternalController
+│           ├── service/          # Biznes məntiqi
+│           ├── entity/           # JPA entity-lər
+│           ├── repository/       # Spring Data JPA
+│           ├── dto/              # Request/Response DTO-lar
+│           ├── mapper/           # MapStruct mapper-lər
+│           ├── security/         # JWT, OAuth2 konfiqurasiyası
+│           ├── config/           # Spring konfiqurasiyaları
+│           └── exception/        # Xəta idarəetməsi
+│
+├── restaurant-service/           # Restoran idarəetmə servisi
+│   └── src/main/java/
+│       └── com/asanrezerv/restaurantservice/
+│           ├── controller/
+│           ├── service/
+│           ├── entity/
+│           ├── repository/
+│           ├── dto/
+│           ├── enums/
+│           ├── mapper/
+│           ├── client/           # OpenFeign client-lər
+│           └── util/
+│
+├── reservation-service/          # Rezervasiya servisi
+├── staff-service/                # İşçi idarəetmə servisi (OkHttp + Feign PATCH)
+├── subscription-service/         # Abunəlik servisi
+├── search-service/               # Elasticsearch axtarış servisi
+├── media-service/                # Cloudinary media servisi
+├── notification-service/         # E-poçt bildiriş servisi
+└── ai-analysis-service/          # Stateless AI analitika servisi (DB yox)
+```
+
+---
+
+## Qeydlər
+
+- **Spring Cloud uyğunluq yoxlaması** API Gateway-də söndürülüb (`compatibility-verifier: enabled: false`), çünki Spring Cloud verifier Boot 4.0.x tələb edir, lakin runtime-da 4.1 işləyir.
+- **Staff Service** JDK-in default Feign client-i (`HttpURLConnection`) `PATCH` metodunu dəstəkləmədiyindən OkHttp istifadə edir.
+- **AI Analysis Service** tamamilə stateless-dir — JPA və PostgreSQL asılılığı yoxdur, yalnız Redis cache istifadə edir.
+- Bütün servisler **Java 26** toolchain tələb edir.
+
+---
+
+<p align="center">
+  Built with ❤️ for Azerbaijan 🇦🇿
+</p>
